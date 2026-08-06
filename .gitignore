@@ -1,0 +1,58 @@
+# Environment variables & secrets
+.env
+.env.local
+!.env.example
+
+# Firebase service account key & certificates
+firebase_key.json
+*.pem
+*.key
+*.crt
+
+# Local data storage
+local_db.json
+
+# Media & Uploads (exclude files, keep directory via .gitkeep)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Python cache & build outputs
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & OS Metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

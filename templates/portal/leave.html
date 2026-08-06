@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Management | {{ tenant.business_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Admin Leave Management</h1>
+            <p class="text-sm text-slate-500">Record employee leave and integrate into attendance registers.</p>
+        </div>
+        <button onclick="document.getElementById('modal-add-leave').classList.remove('hidden')"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md text-xs transition-all flex items-center">
+            <i class="fas fa-calendar-plus mr-2"></i> Record Employee Leave
+        </button>
+    </div>
+
+    <!-- Leaves Table -->
+    {% if leaves %}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold">
+                        <th class="py-3.5 px-4">Employee</th>
+                        <th class="py-3.5 px-4">Leave Type</th>
+                        <th class="py-3.5 px-4">Dates</th>
+                        <th class="py-3.5 px-4">Pay Status</th>
+                        <th class="py-3.5 px-4">Reason</th>
+                        <th class="py-3.5 px-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for l in leaves %}
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="py-3.5 px-4 font-bold text-slate-900">{{ l.employee_name }}</td>
+                        <td class="py-3.5 px-4 font-medium text-slate-700">{{ l.leave_type }}</td>
+                        <td class="py-3.5 px-4 text-slate-600 font-mono">{{ l.start_date }}{% if l.end_date and l.end_date != l.start_date %} → {{ l.end_date }}{% endif %}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2 py-0.5 rounded-md font-bold text-[10px] {% if l.paid_status == 'Paid' %}bg-emerald-100 text-emerald-800{% else %}bg-amber-100 text-amber-800{% endif %}">
+                                {{ l.paid_status }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-500 italic max-w-xs truncate">{{ l.reason or 'No reason specified' }}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                                {{ l.status or 'Approved' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center space-y-4">
+        <div class="inline-flex p-4 rounded-full bg-indigo-50 text-indigo-600">
+            <i class="fas fa-calendar-xmark text-3xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">No leave records registered</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">When an employee requests leave, record it here to mark them excused in attendance reports.</p>
+        <button onclick="document.getElementById('modal-add-leave').classList.remove('hidden')"
+            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition-all">
+            <i class="fas fa-calendar-plus mr-1.5"></i> Record First Leave
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal: Add Leave -->
+<div id="modal-add-leave" class="fixed inset-0 bg-slate-900/75 backdrop-blur-md flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-900"><i class="fas fa-calendar-plus text-indigo-600 mr-2"></i> Record Employee Leave</h3>
+            <button onclick="document.getElementById('modal-add-leave').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('tenant.leave') }}" class="space-y-4 text-xs">
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Select Employee</label>
+                <select name="employee_id" required class="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none">
+                    {% for emp in employees %}
+                    <option value="{{ emp.employee_id }}">{{ emp.full_name }} ({{ emp.unique_emp_code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Start Date</label>
+                    <input type="date" name="start_date" required class="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">End Date (Optional)</label>
+                    <input type="date" name="end_date" class="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Leave Type</label>
+                    <select name="leave_type" class="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none">
+                        <option value="Casual Leave">Casual Leave</option>
+                        <option value="Sick Leave">Sick Leave</option>
+                        <option value="Earned Leave">Earned Leave</option>
+                        <option value="Maternity/Paternity">Maternity/Paternity</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Pay Status</label>
+                    <select name="paid_status" class="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none">
+                        <option value="Paid">Paid Leave</option>
+                        <option value="Unpaid">Unpaid Leave</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Reason / Note</label>
+                <textarea name="reason" rows="2" placeholder="e.g. Medical emergency or personal leave"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none"></textarea>
+            </div>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('modal-add-leave').classList.add('hidden')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl shadow">Save & Approve Leave</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

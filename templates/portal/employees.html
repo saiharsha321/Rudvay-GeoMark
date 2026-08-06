@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Employees | {{ tenant.business_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Employee Roster Management</h1>
+            <p class="text-sm text-slate-500">Add employees, assign shifts, manage biometric face enrollment & punch codes.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="document.getElementById('modal-csv-import').classList.remove('hidden')"
+                class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-xs shadow transition-all flex items-center">
+                <i class="fas fa-file-import mr-1.5"></i> Bulk CSV Import
+            </button>
+            <button onclick="document.getElementById('add-emp-modal').classList.remove('hidden')"
+                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center">
+                <i class="fas fa-user-plus mr-1.5"></i> Add Employee
+            </button>
+        </div>
+    </div>
+
+    <!-- Employee Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-700">
+                <thead class="bg-slate-50 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4">Full Name</th>
+                        <th class="py-3 px-4">Punch Code</th>
+                        <th class="py-3 px-4">Email & Phone</th>
+                        <th class="py-3 px-4">Assigned Shift</th>
+                        <th class="py-3 px-4">Face Enrollment</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for emp in employees %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3.5 px-4 font-semibold text-slate-900">{{ emp.full_name }}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 text-xs font-mono font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                {{ emp.unique_emp_code }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600 text-xs">
+                            <div>{{ emp.email or 'No email' }}</div>
+                            <div class="text-slate-400">{{ emp.phone or 'No phone' }}</div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700">
+                                {{ emp.shift_name }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if emp.face_descriptor %}
+                                <span class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
+                                    <i class="fas fa-face-smile"></i> Enrolled
+                                </span>
+                            {% else %}
+                                <span class="px-2.5 py-1 text-[11px] font-medium rounded-full bg-slate-100 text-slate-500">
+                                    Not Enrolled
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if emp.status == 'active' %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Active</span>
+                            {% else %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800">Disabled</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right space-x-1.5">
+                            <!-- Face Enrollment Button -->
+                            <button onclick="openEnrollFaceModal('{{ emp.employee_id }}', '{{ emp.full_name }}')"
+                                class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-xs font-bold transition-all"
+                                title="Enroll Biometric Face">
+                                <i class="fas fa-camera mr-1"></i> Face
+                            </button>
+
+                            <!-- Toggle Status Form -->
+                            <form method="POST" action="{{ url_for('tenant.employees') }}" class="inline">
+                                <input type="hidden" name="action" value="toggle_status">
+                                <input type="hidden" name="employee_id" value="{{ emp.employee_id }}">
+                                {% if emp.status == 'active' %}
+                                    <input type="hidden" name="new_status" value="disabled">
+                                    <button type="submit" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold">
+                                        Disable
+                                    </button>
+                                {% else %}
+                                    <input type="hidden" name="new_status" value="active">
+                                    <button type="submit" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold">
+                                        Enable
+                                    </button>
+                                {% endif %}
+                            </form>
+
+                            <!-- Delete Form -->
+                            <form method="POST" action="{{ url_for('tenant.employees') }}" class="inline" onsubmit="return confirm('Remove employee?');">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="employee_id" value="{{ emp.employee_id }}">
+                                <button type="submit" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold">
+                                    <i class="fas fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400">No employees added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Bulk CSV Import -->
+<div id="modal-csv-import" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-900"><i class="fas fa-file-csv text-indigo-600 mr-2"></i> Bulk CSV Employee Import</h3>
+            <button onclick="document.getElementById('modal-csv-import').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('tenant.import_employees_csv') }}" enctype="multipart/form-data" class="space-y-4 text-xs">
+            <p class="text-slate-500">Upload a CSV file containing columns: <code>full_name</code>, <code>email</code>, <code>phone</code>, <code>emp_code</code>.</p>
+            <div>
+                <input type="file" name="file" accept=".csv" required class="w-full px-3 py-2 rounded-xl border border-slate-200">
+            </div>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('modal-csv-import').classList.add('hidden')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl shadow">Upload & Import</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Enroll Face -->
+<div id="modal-enroll-face" class="fixed inset-0 bg-slate-900/75 backdrop-blur-md flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 id="enroll-emp-title" class="text-base font-bold text-slate-900">Enroll Biometric Face</h3>
+            <button onclick="closeEnrollModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="relative w-full h-56 bg-slate-950 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+            <video id="enroll-video" autoplay playsinline muted class="w-full h-full object-cover transform -scale-x-100"></video>
+            <canvas id="enroll-canvas" class="hidden"></canvas>
+            <div class="absolute inset-0 border-2 border-purple-500/50 rounded-2xl pointer-events-none"></div>
+        </div>
+
+        <button id="btn-capture-enroll" onclick="captureAndEnrollFace()"
+            class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md text-xs transition-all">
+            <i class="fas fa-camera mr-2"></i> Capture & Save Biometric Face
+        </button>
+
+        <form id="form-delete-face" method="POST" action="" class="pt-2 border-t border-slate-100">
+            <button type="submit" class="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs">
+                Delete Stored Face Biometric
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div id="add-emp-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-900">Add New Employee</h3>
+            <button onclick="document.getElementById('add-emp-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{{ url_for('tenant.employees') }}" class="space-y-4 text-sm">
+            <input type="hidden" name="action" value="create">
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Full Name</label>
+                <input type="text" name="full_name" required placeholder="e.g. Alex Johnson"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Email Address</label>
+                <input type="email" name="email" placeholder="alex@company.com"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Phone Number</label>
+                <input type="text" name="phone" placeholder="+91-9876543210"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Unique Employee Punch Code</label>
+                <input type="text" name="unique_emp_code" placeholder="Leave blank to auto-generate (e.g. EMP-A4B8)"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none font-mono text-xs">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Assign Shift</label>
+                <select name="shift_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none text-xs">
+                    {% for s in shifts %}
+                        <option value="{{ s.shift_id }}">{{ s.name }} ({{ s.start_time }} - {{ s.end_time }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="pt-3 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('add-emp-modal').classList.add('hidden')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-md">
+                    Save Employee
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/face_detection.js') }}"></script>
+<script>
+let currentEnrollEmpId = null;
+let enrollStream = null;
+
+async function openEnrollFaceModal(empId, empName) {
+    currentEnrollEmpId = empId;
+    document.getElementById('enroll-emp-title').innerText = 'Enroll Face: ' + empName;
+    document.getElementById('form-delete-face').action = `/portal/employees/${empId}/delete-face`;
+    document.getElementById('modal-enroll-face').classList.remove('hidden');
+
+    const video = document.getElementById('enroll-video');
+    try {
+        enrollStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        video.srcObject = enrollStream;
+    } catch (e) {
+        alert("Camera permission denied or unavailable.");
+    }
+}
+
+function closeEnrollModal() {
+    if (enrollStream) {
+        enrollStream.getTracks().forEach(t => t.stop());
+        enrollStream = null;
+    }
+    document.getElementById('modal-enroll-face').classList.add('hidden');
+}
+
+async function captureAndEnrollFace() {
+    if (!currentEnrollEmpId) return;
+    const video = document.getElementById('enroll-video');
+    
+    const btn = document.getElementById('btn-capture-enroll');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Detecting Face & Saving...';
+
+    try {
+        const faceRes = await FaceDetectionEngine.detectAndExtractFace(video);
+        if (!faceRes.hasFace) {
+            alert(faceRes.reason || "No face detected in camera stream. Please center your face clearly in the camera viewfinder.");
+            return;
+        }
+
+        const descriptor = faceRes.descriptor;
+        const res = await fetch(`/portal/employees/${currentEnrollEmpId}/enroll-face`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ face_descriptor: descriptor })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            closeEnrollModal();
+            window.location.reload();
+        } else {
+            alert(data.message || "Enrollment failed");
+        }
+    } catch (err) {
+        alert("Error submitting face descriptor: " + err);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-camera mr-2"></i> Capture & Save Biometric Face';
+    }
+}
+</script>
+{% endblock %}

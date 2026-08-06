@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | {{ tenant.business_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ tenant.business_name }} Attendance Portal</h1>
+            <p class="text-sm text-slate-500">Live attendance monitoring, verification & manual adjustments</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="document.getElementById('manual-entry-modal').classList.remove('hidden')"
+                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-sm shadow-md transition-all">
+                <i class="fas fa-pen-to-square mr-1.5"></i> Manual Attendance Entry
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-400">Punches Today</p>
+                <h3 class="text-3xl font-extrabold text-slate-900 mt-1">{{ stats.total_today }} / {{ stats.total_employees }}</h3>
+            </div>
+            <div class="p-3.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                <i class="fas fa-clipboard-user text-xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-400">On Time</p>
+                <h3 class="text-3xl font-extrabold text-emerald-600 mt-1">{{ stats.on_time_count }}</h3>
+            </div>
+            <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                <i class="fas fa-circle-check text-xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-400">Late Arrivals</p>
+                <h3 class="text-3xl font-extrabold text-amber-600 mt-1">{{ stats.late_count }}</h3>
+            </div>
+            <div class="p-3.5 bg-amber-50 text-amber-600 rounded-xl">
+                <i class="fas fa-clock-triangle-exclamation text-xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-400">Geofence Alerts</p>
+                <h3 class="text-3xl font-extrabold text-rose-600 mt-1">{{ stats.violation_count }}</h3>
+            </div>
+            <div class="p-3.5 bg-rose-50 text-rose-600 rounded-xl">
+                <i class="fas fa-triangle-exclamation text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+        <form method="GET" action="{{ url_for('tenant.dashboard') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1">Date</label>
+                <input type="date" name="date" value="{{ filter_date }}" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-slate-800">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1">Employee</label>
+                <select name="employee_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-slate-800">
+                    <option value="">All Employees</option>
+                    {% for emp in employees %}
+                        <option value="{{ emp.employee_id }}" {% if filter_employee == emp.employee_id %}selected{% endif %}>
+                            {{ emp.full_name }} ({{ emp.unique_emp_code }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1">Status</label>
+                <select name="status" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-slate-800">
+                    <option value="">All Statuses</option>
+                    <option value="ON_TIME" {% if filter_status == 'ON_TIME' %}selected{% endif %}>On Time</option>
+                    <option value="LATE" {% if filter_status == 'LATE' %}selected{% endif %}>Late</option>
+                    <option value="GEOFENCE_VIOLATION" {% if filter_status == 'GEOFENCE_VIOLATION' %}selected{% endif %}>Geofence Violation</option>
+                    <option value="MANUAL" {% if filter_status == 'MANUAL' %}selected{% endif %}>Manual Entry</option>
+                </select>
+            </div>
+
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-sm">
+                    <i class="fas fa-filter mr-1"></i> Apply Filter
+                </button>
+                <a href="{{ url_for('tenant.dashboard') }}" class="py-2 px-3 bg-slate-100 text-slate-600 rounded-xl font-medium">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-700">
+                <thead class="bg-slate-50 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4">Employee</th>
+                        <th class="py-3 px-4">Date</th>
+                        <th class="py-3 px-4">Punch In</th>
+                        <th class="py-3 px-4">Punch Out</th>
+                        <th class="py-3 px-4">Photo Proof</th>
+                        <th class="py-3 px-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for r in records %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3.5 px-4 font-semibold text-slate-900">{{ r.employee_name }}</td>
+                        <td class="py-3.5 px-4 text-slate-600 font-mono text-xs">{{ r.date }}</td>
+                        <td class="py-3.5 px-4 text-slate-800 font-medium">
+                            {{ r.punch_in_time or '--:--' }}
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-800 font-medium">
+                            {{ r.punch_out_time or '--:--' }}
+                        </td>
+                        <td class="py-3.5 px-4 space-x-2">
+                            {% if r.punch_in_photo_url %}
+                                <button onclick="openPhotoModal('{{ r.punch_in_photo_url }}', 'Punch In Photo - {{ r.employee_name }}')"
+                                    class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100">
+                                    <i class="fas fa-camera mr-1"></i> In Photo
+                                </button>
+                            {% endif %}
+                            {% if r.punch_out_photo_url %}
+                                <button onclick="openPhotoModal('{{ r.punch_out_photo_url }}', 'Punch Out Photo - {{ r.employee_name }}')"
+                                    class="px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-100">
+                                    <i class="fas fa-camera mr-1"></i> Out Photo
+                                </button>
+                            {% endif %}
+                            {% if not r.punch_in_photo_url and not r.punch_out_photo_url %}
+                                <span class="text-xs text-slate-400">No Photo</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if r.status == 'ON_TIME' %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">On Time</span>
+                            {% elif r.status == 'LATE' %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Late</span>
+                            {% elif r.status == 'GEOFENCE_VIOLATION' or r.is_outside_fence %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800">Geofence Violation</span>
+                            {% else %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-sky-100 text-sky-800">{{ r.status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">No attendance logs found matching current filter criteria.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Viewer Modal -->
+<div id="photo-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 text-center">
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+            <h3 id="photo-modal-title" class="text-base font-bold text-slate-900">Punch Verification Photo</h3>
+            <button onclick="document.getElementById('photo-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <img id="photo-modal-img" src="" alt="Punch Photo" class="w-full h-64 object-cover rounded-xl shadow-md">
+    </div>
+</div>
+
+<!-- Manual Attendance Modal -->
+<div id="manual-entry-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-slate-100">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-900">Manual Attendance Override</h3>
+            <button onclick="document.getElementById('manual-entry-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{{ url_for('tenant.manual_attendance') }}" class="space-y-4 text-sm">
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Select Employee</label>
+                <select name="employee_id" required class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+                    {% for emp in employees %}
+                        <option value="{{ emp.employee_id }}">{{ emp.full_name }} ({{ emp.unique_emp_code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Date</label>
+                <input type="date" name="date" required value="{{ filter_date }}"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Punch In Time</label>
+                    <input type="time" name="punch_in_time" value="09:00" required
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Punch Out Time</label>
+                    <input type="time" name="punch_out_time" value="18:00" required
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Status Override</label>
+                <select name="status" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                    <option value="ON_TIME">ON_TIME</option>
+                    <option value="LATE">LATE</option>
+                    <option value="MANUAL" selected>MANUAL</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Reason for Manual Override</label>
+                <input type="text" name="reason" required placeholder="e.g. Field duty approval / Offsite client visit"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+            </div>
+
+            <div class="pt-3 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('manual-entry-modal').classList.add('hidden')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-md">
+                    Save Attendance Record
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openPhotoModal(url, title) {
+        document.getElementById('photo-modal-img').src = url;
+        document.getElementById('photo-modal-title').innerText = title;
+        document.getElementById('photo-modal').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

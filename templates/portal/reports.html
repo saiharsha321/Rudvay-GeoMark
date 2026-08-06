@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Reports & Register | {{ tenant.business_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Monthly Attendance Register & Analytics</h1>
+            <p class="text-sm text-slate-500">Traditional 31-day attendance register matrix (P, A, L, H, WO, HD) with genuine CSV exports.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <form method="GET" action="{{ url_for('tenant.reports') }}" class="flex items-center gap-2">
+                <input type="month" name="month" value="{{ month_filter }}" onchange="this.form.submit()"
+                    class="px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 text-slate-800 outline-none">
+            </form>
+            <a href="{{ url_for('tenant.export_reports_csv', month=month_filter) }}"
+                class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md text-xs transition-all flex items-center">
+                <i class="fas fa-file-csv mr-2 text-sm"></i> Export CSV Register
+            </a>
+        </div>
+    </div>
+
+    <!-- Monthly Register Table -->
+    {% if register_rows %}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700">Attendance Month: {{ month_filter }}</span>
+            <div class="flex items-center gap-3 font-mono text-[11px]">
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> P = Present</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-amber-500"></span> L = Late</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500"></span> HD = Half Day</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-blue-500"></span> H = Leave</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-slate-400"></span> WO = Weekly Off</span>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-center border-collapse text-[11px] font-mono">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                        <th class="py-2.5 px-3 text-left font-sans text-xs">Employee Name</th>
+                        <th class="py-2.5 px-2 text-left font-sans text-xs">Code</th>
+                        {% for d in day_numbers %}
+                        <th class="py-2.5 px-1.5 w-7 text-center">{{ d }}</th>
+                        {% endfor %}
+                        <th class="py-2.5 px-2 font-sans text-xs text-emerald-700">P</th>
+                        <th class="py-2.5 px-2 font-sans text-xs text-amber-700">L</th>
+                        <th class="py-2.5 px-2 font-sans text-xs text-purple-700">HD</th>
+                        <th class="py-2.5 px-2 font-sans text-xs text-blue-700">H</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for r in register_rows %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-2.5 px-3 text-left font-bold font-sans text-slate-900 whitespace-nowrap">{{ r.employee_name }}</td>
+                        <td class="py-2.5 px-2 text-left text-slate-500 font-mono text-[10px]">{{ r.emp_code }}</td>
+                        {% for d in day_numbers %}
+                        {% set st = r.days[d] %}
+                        <td class="py-2.5 px-1.5 text-center font-bold">
+                            {% if st == 'P' %}<span class="text-emerald-600">P</span>
+                            {% elif st == 'L' %}<span class="text-amber-600">L</span>
+                            {% elif st == 'HD' %}<span class="text-purple-600">HD</span>
+                            {% elif st == 'H' %}<span class="text-blue-600">H</span>
+                            {% elif st == 'WO' %}<span class="text-slate-400 font-normal">WO</span>
+                            {% else %}<span class="text-slate-300 font-normal">-</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="py-2.5 px-2 font-bold text-emerald-700 bg-emerald-50/50">{{ r.summary['P'] }}</td>
+                        <td class="py-2.5 px-2 font-bold text-amber-700 bg-amber-50/50">{{ r.summary['L'] }}</td>
+                        <td class="py-2.5 px-2 font-bold text-purple-700 bg-purple-50/50">{{ r.summary['HD'] }}</td>
+                        <td class="py-2.5 px-2 font-bold text-blue-700 bg-blue-50/50">{{ r.summary['H'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center space-y-4">
+        <div class="inline-flex p-4 rounded-full bg-indigo-50 text-indigo-600">
+            <i class="fas fa-file-invoice text-3xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">No attendance reports available for this period</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">Once employees punch in or attendance is recorded, monthly register logs will populate automatically.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

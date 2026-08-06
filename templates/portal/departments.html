@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Departments | {{ tenant.business_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900">Departments</h1>
+            <p class="text-sm text-slate-500">Organize employees into functional departments and teams.</p>
+        </div>
+        <button onclick="document.getElementById('modal-add-dept').classList.remove('hidden')"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md text-xs transition-all flex items-center">
+            <i class="fas fa-plus mr-2"></i> Add Department
+        </button>
+    </div>
+
+    <!-- Department Grid -->
+    {% if departments %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for d in departments %}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-layer-group text-indigo-600 mr-2"></i>{{ d.name }}</h3>
+                    <span class="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-indigo-100 text-indigo-800 font-mono">{{ d.code }}</span>
+                </div>
+                <p class="text-xs text-slate-500">{{ d.description or 'No description provided.' }}</p>
+            </div>
+            <form method="POST" action="{{ url_for('tenant.departments') }}" onsubmit="return confirm('Remove department?')" class="pt-2 border-t border-slate-100">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="department_id" value="{{ d.department_id }}">
+                <button type="submit" class="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition-all">
+                    <i class="fas fa-trash-can mr-1"></i> Delete Department
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center space-y-4">
+        <div class="inline-flex p-4 rounded-full bg-indigo-50 text-indigo-600">
+            <i class="fas fa-sitemap text-3xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">No departments configured yet</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">Group your workforce into departments like Engineering, Sales, HR, or Operations for filtered reporting.</p>
+        <button onclick="document.getElementById('modal-add-dept').classList.remove('hidden')"
+            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition-all">
+            <i class="fas fa-plus mr-1.5"></i> Add First Department
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal: Add Department -->
+<div id="modal-add-dept" class="fixed inset-0 bg-slate-900/75 backdrop-blur-md flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-900"><i class="fas fa-layer-group text-indigo-600 mr-2"></i> Add Department</h3>
+            <button onclick="document.getElementById('modal-add-dept').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('tenant.departments') }}" class="space-y-4 text-xs">
+            <input type="hidden" name="action" value="create">
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Department Name</label>
+                <input type="text" name="name" required placeholder="e.g. Software Engineering"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+            </div>
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Department Code</label>
+                <input type="text" name="code" placeholder="e.g. ENG"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none uppercase font-mono">
+            </div>
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Description</label>
+                <textarea name="description" rows="3" placeholder="Core software development team"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none"></textarea>
+            </div>
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('modal-add-dept').classList.add('hidden')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl shadow">Save Department</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

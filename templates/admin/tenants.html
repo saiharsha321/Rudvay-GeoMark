@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Tenant Management | Super Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Tenant Management Console</h1>
+            <p class="text-sm text-slate-500">Create, Block, Upgrade, or Delete Tenant Businesses</p>
+        </div>
+        <button onclick="document.getElementById('create-tenant-modal').classList.remove('hidden')"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-sm shadow-md transition-all">
+            <i class="fas fa-plus mr-2"></i> Create New Tenant
+        </button>
+    </div>
+
+    <!-- Tenants Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-700">
+                <thead class="bg-slate-50 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4">Business Name & ID</th>
+                        <th class="py-3 px-4">Owner Email</th>
+                        <th class="py-3 px-4">Plan & Subscription</th>
+                        <th class="py-3 px-4">Geofence (Lat, Lng, Radius)</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for t in tenants %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3.5 px-4">
+                            <div class="font-semibold text-slate-900">{{ t.business_name }}</div>
+                            <div class="text-xs font-mono text-slate-400">{{ t.tenant_id }}</div>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600">{{ t.owner_email }}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-medium text-indigo-600 text-xs">{{ t.current_plan_id }}</div>
+                            <div class="text-xs text-slate-400 font-mono">{{ t.razorpay_subscription_id }}</div>
+                        </td>
+                        <td class="py-3.5 px-4 text-xs text-slate-500">
+                            {% if t.geofence %}
+                                <div>{{ "%.4f"|format(t.geofence.latitude) }}, {{ "%.4f"|format(t.geofence.longitude) }}</div>
+                                <div class="font-medium text-slate-700">{{ t.geofence.radius_meters }}m radius</div>
+                            {% else %}
+                                <span class="text-slate-400">Not configured</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if t.status == 'active' %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Active</span>
+                            {% elif t.status == 'blocked' %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800">Blocked</span>
+                            {% else %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">{{ t.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right space-x-2">
+                            <!-- Toggle Status Form -->
+                            <form method="POST" action="{{ url_for('admin.tenants') }}" class="inline">
+                                <input type="hidden" name="action" value="toggle_status">
+                                <input type="hidden" name="tenant_id" value="{{ t.tenant_id }}">
+                                {% if t.status == 'active' %}
+                                    <input type="hidden" name="new_status" value="blocked">
+                                    <button type="submit" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold">
+                                        <i class="fas fa-ban mr-1"></i> Block
+                                    </button>
+                                {% else %}
+                                    <input type="hidden" name="new_status" value="active">
+                                    <button type="submit" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold">
+                                        <i class="fas fa-circle-check mr-1"></i> Unblock
+                                    </button>
+                                {% endif %}
+                            </form>
+
+                            <!-- Hard Delete Form -->
+                            <form method="POST" action="{{ url_for('admin.tenants') }}" class="inline" onsubmit="return confirm('Are you sure you want to hard delete this tenant and all data?');">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="tenant_id" value="{{ t.tenant_id }}">
+                                <button type="submit" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold">
+                                    <i class="fas fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">No tenants registered in the system.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Tenant Modal -->
+<div id="create-tenant-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-slate-100">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-900">Create New Business Tenant</h3>
+            <button onclick="document.getElementById('create-tenant-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.tenants') }}" class="space-y-4 text-sm">
+            <input type="hidden" name="action" value="create">
+            
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Business / Company Name</label>
+                <input type="text" name="business_name" required placeholder="e.g. Apex Global Solutions"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Owner Email</label>
+                <input type="email" name="owner_email" required placeholder="owner@company.com"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Owner Account Password</label>
+                <input type="password" name="owner_password" required value="OwnerPassword123!"
+                    class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Initial Subscription Plan</label>
+                <select name="plan_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+                    {% for p in plans %}
+                        <option value="{{ p.plan_id }}">{{ p.name }} (₹{{ p.price }} / {{ p.max_employees }} emp)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Latitude</label>
+                    <input type="number" step="any" name="latitude" value="17.385044" required
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Longitude</label>
+                    <input type="number" step="any" name="longitude" value="78.486671" required
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Radius (m)</label>
+                    <input type="number" name="radius_meters" value="200" required
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                </div>
+            </div>
+
+            <div class="pt-3 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('create-tenant-modal').classList.add('hidden')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-md">
+                    Create Tenant
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

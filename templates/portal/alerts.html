@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Geofence Alerts | {{ tenant.business_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="border-b border-slate-200 pb-4">
+        <h1 class="text-2xl font-extrabold text-slate-900">Geofence Violation Alerts</h1>
+        <p class="text-sm text-slate-500">Real-time log of out-of-bounds punch attempts and perimeter exit events.</p>
+    </div>
+
+    <!-- Alerts Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-700">
+                <thead class="bg-slate-50 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4">Timestamp</th>
+                        <th class="py-3 px-4">Employee</th>
+                        <th class="py-3 px-4">Alert Type</th>
+                        <th class="py-3 px-4">Violation Details</th>
+                        <th class="py-3 px-4">Resolution Status</th>
+                        <th class="py-3 px-4 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for a in alerts %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3.5 px-4 font-mono text-xs text-slate-500">{{ a.timestamp }}</td>
+                        <td class="py-3.5 px-4 font-semibold text-slate-900">{{ a.employee_name }}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800">
+                                <i class="fas fa-triangle-exclamation mr-1"></i> {{ a.alert_type }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-xs text-slate-600">
+                            <div><strong>Distance:</strong> {{ a.distance_meters }}m (Max limit: {{ a.allowed_radius_meters }}m)</div>
+                            <div class="font-mono text-slate-400">Lat: {{ "%.4f"|format(a.latitude) }}, Lng: {{ "%.4f"|format(a.longitude) }}</div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if a.resolved %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Resolved</span>
+                            {% else %}
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 animate-pulse">Unresolved</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            {% if not a.resolved %}
+                                <form method="POST" action="{{ url_for('tenant.alerts') }}">
+                                    <input type="hidden" name="alert_id" value="{{ a.alert_id }}">
+                                    <button type="submit" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold">
+                                        Mark Resolved
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-xs text-slate-400"><i class="fas fa-check"></i> Resolved</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">No geofence exit alerts recorded. All punch events within bounds.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Geofence Manager | {{ tenant.business_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="border-b border-slate-200 pb-4">
+        <h1 class="text-2xl font-extrabold text-slate-900">Geofence Perimeter Configurator</h1>
+        <p class="text-sm text-slate-500">Set office location coordinates and visual radius boundary for employee attendance checks.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Control Form Panel -->
+        <div class="space-y-6">
+            <!-- Geofence Control Form -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <form method="POST" action="{{ url_for('tenant.geofence') }}" class="space-y-4 text-sm">
+                    <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center justify-between">
+                        <span><i class="fas fa-location-dot text-indigo-600 mr-2"></i>Geofence Settings</span>
+                        <button type="button" id="btn-use-current-location" 
+                            class="px-2.5 py-1 text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg transition-all flex items-center">
+                            <i class="fas fa-crosshairs mr-1"></i> Use My Location
+                        </button>
+                    </h3>
+
+                    <!-- Map Search Box -->
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Search Place / Address / Landmark</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="map-search-input" placeholder="e.g. Cyber Towers, Hyderabad"
+                                class="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+                            <button type="button" id="btn-search-location"
+                                class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-sm">
+                                Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Office Name / Address</label>
+                        <input type="text" name="address" id="address-input" value="{{ geofence.address or '' }}" placeholder="HQ Office Park"
+                            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Latitude</label>
+                            <input type="number" step="any" id="lat-input" name="latitude" value="{{ geofence.latitude }}" required
+                                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none font-mono">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Longitude</label>
+                            <input type="number" step="any" id="lng-input" name="longitude" value="{{ geofence.longitude }}" required
+                                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-200 outline-none font-mono">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="font-semibold text-slate-700 text-xs">Perimeter Radius</label>
+                            <span id="radius-display" class="font-bold text-indigo-600 text-sm">{{ geofence.radius_meters }}m</span>
+                        </div>
+                        <input type="range" id="radius-slider" name="radius_meters" min="50" max="2000" step="25" value="{{ geofence.radius_meters }}"
+                            class="w-full accent-indigo-600 cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                            <span>50m</span>
+                            <span>1000m</span>
+                            <span>2000m</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition-all">
+                            <i class="fas fa-floppy-disk mr-1.5"></i> Save Geofence Location
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Attendance Verification Requirements Settings -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <form method="POST" action="{{ url_for('tenant.save_verification_settings') }}" class="space-y-3 text-xs">
+                    <h3 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center">
+                        <i class="fas fa-user-shield text-indigo-600 mr-2"></i> Verification Options
+                    </h3>
+                    
+                    {% set vs = tenant.verification_settings or {} %}
+                    <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                        <span class="font-semibold text-slate-700">Require GPS Geofence Check</span>
+                        <input type="checkbox" name="require_geofence" value="1" {% if vs.get('require_geofence', True) %}checked{% endif %} class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+
+                    <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                        <span class="font-semibold text-slate-700">Require Security PIN Code</span>
+                        <input type="checkbox" name="require_pin" value="1" {% if vs.get('require_pin') %}checked{% endif %} class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+
+                    <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                        <span class="font-semibold text-slate-700">Require Biometric Face Verification</span>
+                        <input type="checkbox" name="require_face" value="1" {% if vs.get('require_face') %}checked{% endif %} class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+
+                    <button type="submit" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition-all mt-2">
+                        Update Verification Policy
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Interactive Map Container -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex flex-col">
+            <div class="flex items-center justify-between mb-3 px-2">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <i class="fas fa-location-dot text-indigo-600 mr-1"></i> Drag pin or click map to move perimeter
+                </span>
+                <span class="text-xs text-indigo-600 font-medium">Interactive Leaflet Map</span>
+            </div>
+
+            <div id="geofence-map" class="w-full h-[480px] rounded-xl border border-slate-200 shadow-inner z-10"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/geofence_map.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initGeofenceMap(
+            'geofence-map',
+            '{{ geofence.latitude }}',
+            '{{ geofence.longitude }}',
+            '{{ geofence.radius_meters }}',
+            'lat-input',
+            'lng-input',
+            'radius-slider',
+            'radius-display'
+        );
+    });
+</script>
+{% endblock %}

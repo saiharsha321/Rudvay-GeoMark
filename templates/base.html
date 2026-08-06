@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GeoFence Attendance System{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f3ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+    <!-- Firebase JS SDK Config -->
+    <script>
+        window.firebaseConfig = {{ firebase_config | tojson | safe if firebase_config else '{}' }};
+    </script>
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+    <!-- Navigation Bar -->
+    <nav class="bg-slate-900 text-white shadow-lg border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <a href="/" class="flex items-center space-x-2 text-xl font-bold tracking-tight text-white">
+                        <span class="p-2 bg-indigo-600 rounded-lg text-white shadow-md">
+                            <i class="fas fa-location-crosshairs"></i>
+                        </span>
+                        <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">GeoAttend</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    {% if session.get('is_admin') %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-chart-pie mr-1.5 text-indigo-400"></i> Admin Dashboard
+                        </a>
+                        <a href="{{ url_for('admin.tenants') }}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-building mr-1.5 text-indigo-400"></i> Tenants
+                        </a>
+                        <a href="{{ url_for('admin.plans') }}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-tags mr-1.5 text-indigo-400"></i> Plans
+                        </a>
+                        <a href="{{ url_for('admin.logout') }}" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        </a>
+                    {% elif session.get('tenant_owner_logged_in') and session.get('tenant_id') %}
+                        <a href="{{ url_for('tenant.dashboard') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-table-cells mr-1 text-indigo-400"></i> Dashboard
+                        </a>
+                        <a href="{{ url_for('tenant.geofence') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-map-marked-alt mr-1 text-indigo-400"></i> Geofence
+                        </a>
+                        <a href="{{ url_for('tenant.employees') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-users mr-1 text-indigo-400"></i> Employees
+                        </a>
+                        <a href="{{ url_for('tenant.branches') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-building mr-1 text-indigo-400"></i> Branches
+                        </a>
+                        <a href="{{ url_for('tenant.departments') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-layer-group mr-1 text-indigo-400"></i> Depts
+                        </a>
+                        <a href="{{ url_for('tenant.shifts') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-clock mr-1 text-indigo-400"></i> Shifts
+                        </a>
+                        <a href="{{ url_for('tenant.leave') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-calendar-xmark mr-1 text-indigo-400"></i> Leave
+                        </a>
+                        <a href="{{ url_for('tenant.reports') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-file-invoice mr-1 text-indigo-400"></i> Reports
+                        </a>
+                        <a href="{{ url_for('tenant.audit_logs') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-shield-cat mr-1 text-indigo-400"></i> Audit
+                        </a>
+                        <a href="{{ url_for('tenant.billing') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-credit-card mr-1 text-indigo-400"></i> Billing
+                        </a>
+                        <a href="{{ url_for('tenant.logout') }}" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('employee.punch_page') }}" class="px-3 py-2 rounded-md text-sm font-medium text-indigo-300 hover:text-white">
+                            <i class="fas fa-mobile-screen-button mr-1.5"></i> Employee Punch
+                        </a>
+                        <a href="{{ url_for('tenant.login') }}" class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md">
+                            <i class="fas fa-user-tie mr-1.5"></i> Owner Portal
+                        </a>
+                        <a href="{{ url_for('admin.login') }}" class="px-3 py-2 rounded-md text-xs font-medium text-slate-400 hover:text-slate-200">
+                            Super Admin
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="space-y-2">
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded-xl text-sm font-medium flex items-center justify-between shadow-sm transition-all
+                            {% if category == 'success' %} bg-emerald-50 text-emerald-800 border border-emerald-200
+                            {% elif category == 'danger' %} bg-rose-50 text-rose-800 border border-rose-200
+                            {% elif category == 'warning' %} bg-amber-50 text-amber-800 border border-amber-200
+                            {% else %} bg-sky-50 text-sky-800 border border-sky-200 {% endif %}">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas {% if category == 'success' %}fa-check-circle text-emerald-600{% elif category == 'danger' %}fa-circle-xmark text-rose-600{% elif category == 'warning' %}fa-triangle-exclamation text-amber-600{% else %}fa-info-circle text-sky-600{% endif %} text-lg"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                            <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Body -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 text-slate-400 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm">
+            <p>&copy; 2026 GeoFence Attendance Systems. Enterprise Multi-Tenant Solution.</p>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

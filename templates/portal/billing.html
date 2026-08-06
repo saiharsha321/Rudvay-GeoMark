@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Billing & Subscription | {{ tenant.business_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="border-b border-slate-200 pb-4">
+        <h1 class="text-2xl font-extrabold text-slate-900">Subscription & Billing Management</h1>
+        <p class="text-sm text-slate-500">Manage plan tier, view subscription dates, and trigger Razorpay payments.</p>
+    </div>
+
+    <!-- Current Plan Card -->
+    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl shadow-xl p-6 relative overflow-hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 rounded-full text-xs font-semibold uppercase tracking-wider">
+                    Current Active Tier
+                </span>
+                <h2 class="text-3xl font-extrabold mt-3">{{ current_plan.name if current_plan else 'Starter Business Plan' }}</h2>
+                <div class="mt-2 text-indigo-200 text-sm flex items-center space-x-4">
+                    <span><i class="fas fa-calendar mr-1"></i> Start: {{ tenant.subscription_start[:10] if tenant.subscription_start else 'N/A' }}</span>
+                    <span><i class="fas fa-calendar-check mr-1"></i> End: {{ tenant.subscription_end[:10] if tenant.subscription_end else 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="text-right">
+                <div class="text-4xl font-extrabold text-white">₹{{ "%.2f"|format(current_plan.price if current_plan else 999.0) }}</div>
+                <div class="text-xs text-indigo-300 font-mono mt-1">RZP Sub ID: {{ tenant.razorpay_subscription_id }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Upgrade Tiers -->
+    <div>
+        <h3 class="text-lg font-bold text-slate-900 mb-4">Available Subscription Plans</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for plan in plans %}
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
+                <div>
+                    <h4 class="text-xl font-bold text-slate-900">{{ plan.name }}</h4>
+                    <div class="mt-2 text-3xl font-extrabold text-indigo-600">₹{{ "%.2f"|format(plan.price) }} <span class="text-xs text-slate-500 font-normal">/ {{ plan.billing_cycle }}</span></div>
+                    <p class="text-xs text-slate-500 mt-1">Up to {{ plan.max_employees }} Employees</p>
+
+                    <div class="mt-4 space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-4">
+                        {% for f in plan.features %}
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-check text-emerald-500"></i>
+                                <span>{{ f }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100">
+                    {% if tenant.current_plan_id == plan.plan_id %}
+                        <button disabled class="w-full py-2.5 bg-slate-100 text-slate-400 font-semibold rounded-xl text-xs">
+                            Current Active Plan
+                        </button>
+                    {% else %}
+                        <button onclick="triggerRazorpayCheckout('{{ plan.plan_id }}', '{{ plan.name }}', '{{ plan.price }}')"
+                            class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs shadow-md transition-all">
+                            <i class="fas fa-bolt mr-1"></i> Subscribe with Razorpay
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Razorpay Modal Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    function triggerRazorpayCheckout(planId, planName, price) {
+        const options = {
+            "key": "rzp_test_geofence12345",
+            "amount": price * 100,
+            "currency": "INR",
+            "name": "GeoAttend Systems",
+            "description": "Subscription for " + planName,
+            "image": "https://cdn-icons-png.flaticon.com/512/854/854878.png",
+            "handler": function (response) {
+                alert("Payment Successful! Razorpay Payment ID: " + response.razorpay_payment_id);
+                window.location.reload();
+            },
+            "prefill": {
+                "name": "{{ tenant.business_name }}",
+                "email": "{{ tenant.owner_email }}"
+            },
+            "theme": {
+                "color": "#4F46E5"
+            }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+    }
+</script>
+{% endblock %}

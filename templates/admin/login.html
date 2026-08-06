@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Super Admin Login | GeoAttend{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100 p-8">
+        <div class="text-center mb-8">
+            <div class="inline-flex p-4 rounded-2xl bg-indigo-50 text-indigo-600 mb-4 shadow-inner">
+                <i class="fas fa-user-shield text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900">Super Admin Portal</h2>
+            <p class="text-sm text-slate-500 mt-1">Authorized platform management credentials required</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.login') }}" class="space-y-5">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Username / Admin Email</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <i class="fas fa-envelope text-sm"></i>
+                    </span>
+                    <input type="text" name="username" required placeholder="admin@system.local" 
+                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-slate-800 transition-all">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Admin Password</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <i class="fas fa-lock text-sm"></i>
+                    </span>
+                    <input type="password" name="password" required placeholder="••••••••" 
+                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-slate-800 transition-all">
+                </div>
+            </div>
+
+            <button type="submit" 
+                class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 transition-all">
+                <i class="fas fa-right-to-bracket mr-2"></i> Access Admin Console
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
