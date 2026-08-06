@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}{{ code | default('Error') }} | GeoMark Powered by Rudvay Tech{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex flex-col items-center justify-center text-center py-12 space-y-6 max-w-lg mx-auto">
+    <div class="w-20 h-20 rounded-3xl bg-rose-50 text-rose-600 flex items-center justify-center text-4xl shadow-inner border border-rose-100">
+        <i class="fas fa-triangle-exclamation"></i>
+    </div>
+    
+    <div class="space-y-2">
+        <h1 class="text-5xl font-extrabold text-slate-900">{{ code | default(500) }}</h1>
+        <h2 class="text-xl font-bold text-slate-800">{{ title | default('Something Went Wrong') }}</h2>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+            {{ message | default('An unexpected server issue occurred. Our engineering team at Rudvay Tech has been notified.') }}
+        </p>
+    </div>
+
+    <div class="pt-4 flex items-center justify-center space-x-4">
+        <a href="/" class="px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs shadow-md">
+            <i class="fas fa-house mr-1.5"></i> Back to Homepage
+        </a>
+        <a href="{{ url_for('public.contact') }}" class="px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs border border-slate-800">
+            Contact Support
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -11,8 +11,11 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Initialize Firebase SDK / Local Fallback Driver
-    init_firebase()
+    # Initialize Firebase SDK / Local Fallback Driver safely
+    try:
+        init_firebase()
+    except Exception as fb_err:
+        logging.error(f"Firebase initialization warning: {fb_err}")
 
     # Register Blueprints
     from blueprints.public import public_bp
@@ -43,11 +46,12 @@ def create_app():
 
     @app.errorhandler(404)
     def page_not_found(e):
-        return render_template('base.html'), 404
+        return render_template('error.html', code=404, title="Page Not Found", message="The page or resource you requested could not be found."), 404
 
     @app.errorhandler(500)
     def internal_server_error(e):
-        return render_template('base.html'), 500
+        logging.error(f"Internal Server Error: {e}", exc_info=True)
+        return render_template('error.html', code=500, title="Internal Server Error", message=str(e) or "An unexpected server error occurred."), 500
 
     return app
 
