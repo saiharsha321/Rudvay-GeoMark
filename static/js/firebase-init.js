@@ -1,8 +1,18 @@
-// Firebase Web SDK Setup
+// Firebase Web SDK Setup (v10.12.0)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  sendEmailVerification, 
+  signOut,
+  onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// Your web app's Firebase configuration
+// Web app Firebase configuration
 export const firebaseConfig = window.firebaseConfig || {
   apiKey: "YOUR_FIREBASE_API_KEY",
   authDomain: "your-app-id.firebaseapp.com",
@@ -13,6 +23,17 @@ export const firebaseConfig = window.firebaseConfig || {
   measurementId: "G-XXXXXXXXXX"
 };
 
-// Initialize Firebase
+// Initialize Firebase App
 export const app = initializeApp(firebaseConfig);
-export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+export const analytics = typeof window !== 'undefined' && firebaseConfig.measurementId ? getAnalytics(app) : null;
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+export {
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+  onAuthStateChanged
+};

@@ -3,6 +3,7 @@ import json
 import uuid
 import logging
 from datetime import datetime, timezone
+from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -16,39 +17,50 @@ IS_FIREBASE_REAL = False
 def init_firebase():
     global db, bucket, auth, IS_FIREBASE_REAL
     cred_path = Config.FIREBASE_CREDENTIALS_PATH
+    cred_json_env = os.environ.get('FIREBASE_CREDENTIALS_JSON', '') or os.environ.get('FIREBASE_CREDENTIALS', '')
     
-    if os.environ.get('FORCE_LOCAL_DB', '').lower() not in ['1', 'true'] and os.path.exists(cred_path):
+    if os.environ.get('FORCE_LOCAL_DB', '').lower() not in ['1', 'true']:
         try:
             import firebase_admin
             from firebase_admin import credentials, firestore, storage, auth as fb_auth
             
-            if not firebase_admin._apps:
+            cred = None
+            if cred_json_env and (cred_json_env.strip().startswith('{') or 'private_key' in cred_json_env):
+                try:
+                    cred_dict = json.loads(cred_json_env)
+                    cred = credentials.Certificate(cred_dict)
+                except Exception as json_err:
+                    logger.warning(f"Error parsing FIREBASE_CREDENTIALS_JSON env var: {json_err}")
+            elif os.path.exists(cred_path):
                 cred = credentials.Certificate(cred_path)
-                b_name = (Config.FIREBASE_STORAGE_BUCKET or "").strip()
-                if b_name.endswith('.firebasestorage.app'):
-                    b_name = b_name.replace('.firebasestorage.app', '.appspot.com')
-                firebase_admin.initialize_app(cred, {
-                    'storageBucket': b_name
-                })
-            
-            db = firestore.client()
-            auth = fb_auth
-            try:
-                bucket = storage.bucket()
-            except Exception as b_err:
-                logger.warning(f"Cloud Storage bucket binding warning: {b_err}. Falling back to LocalStorageEngine.")
-                bucket = LocalStorageEngine()
                 
-            # Verify active Firestore API access
-            try:
-                list(db.collection('_health_check').limit(1).stream())
-                IS_FIREBASE_REAL = True
-                logger.info("Successfully connected to real Firebase Firestore, Auth & Storage.")
-                return
-            except Exception as conn_err:
-                logger.warning(f"Firebase credentials loaded, but Firestore API access failed: {conn_err}. Falling back to local engine.")
+            if cred:
+                if not firebase_admin._apps:
+                    b_name = (Config.FIREBASE_STORAGE_BUCKET or "").strip()
+                    if b_name.endswith('.firebasestorage.app'):
+                        b_name = b_name.replace('.firebasestorage.app', '.appspot.com')
+                    firebase_admin.initialize_app(cred, {
+                        'storageBucket': b_name
+                    })
+                
+                db = firestore.client()
+                auth = fb_auth
+                try:
+                    bucket = storage.bucket()
+                except Exception as b_err:
+                    logger.warning(f"Cloud Storage bucket binding warning: {b_err}. Falling back to LocalStorageEngine.")
+                    bucket = LocalStorageEngine()
+                    
+                # Verify active Firestore API access
+                try:
+                    list(db.collection('_health_check').limit(1).stream())
+                    IS_FIREBASE_REAL = True
+                    logger.info("Successfully connected to real Firebase Firestore, Auth & Storage.")
+                    return
+                except Exception as conn_err:
+                    logger.warning(f"Firebase credentials loaded, but Firestore API access failed: {conn_err}. Falling back to local engine.")
         except Exception as e:
-            logger.warning(f"Error loading Firebase credentials from {cred_path}: {e}. Initializing local fallback driver.")
+            logger.warning(f"Error initializing Firebase credentials: {e}. Initializing local fallback driver.")
             
     logger.info("Initializing high-performance local Firestore & Storage database fallback engine.")
     db = LocalFirestoreEngine()
@@ -215,15 +227,29 @@ class QueryReference:
 
 class LocalFirestoreEngine:
     def __init__(self):
-        self.db_file = os.path.join(Config.BASE_DIR, 'local_db.json')
+        import tempfile
+        base_db_file = os.path.join(Config.BASE_DIR, 'local_db.json')
+        
+        # Test if base directory is writable (Vercel serverless environments are read-only)
+        try:
+            test_file = os.path.join(Config.BASE_DIR, '.write_test')
+            with open(test_file, 'w') as f:
+                f.write('1')
+            os.remove(test_file)
+            self.db_file = base_db_file
+        except Exception:
+            self.db_file = os.path.join(tempfile.gettempdir(), 'local_db.json')
+
         self._data = {}
         self.load()
         self._seed_default_data()
 
     def load(self):
-        if os.path.exists(self.db_file):
+        base_db_file = os.path.join(Config.BASE_DIR, 'local_db.json')
+        target_file = self.db_file if os.path.exists(self.db_file) else base_db_file
+        if os.path.exists(target_file):
             try:
-                with open(self.db_file, 'r', encoding='utf-8') as f:
+                with open(target_file, 'r', encoding='utf-8') as f:
                     self._data = json.load(f)
             except Exception as e:
                 logger.error(f"Error loading local_db.json: {e}")
@@ -231,10 +257,11 @@ class LocalFirestoreEngine:
 
     def save(self):
         try:
+            os.makedirs(os.path.dirname(self.db_file), exist_ok=True)
             with open(self.db_file, 'w', encoding='utf-8') as f:
                 json.dump(self._data, f, indent=2, default=str)
         except Exception as e:
-            logger.error(f"Error saving local_db.json: {e}")
+            logger.warning(f"Error saving local_db.json to {self.db_file}: {e}")
 
     def collection(self, name):
         return CollectionReference(self, name)
@@ -295,7 +322,7 @@ class LocalFirestoreEngine:
             self.set_doc("super_admins", admin_id, {
                 "admin_id": admin_id,
                 "email": Config.ADMIN_USERNAME,
-                "password": Config.ADMIN_PASSWORD,
+                "password": generate_password_hash(Config.ADMIN_PASSWORD),
                 "role": "SUPER_ADMIN",
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
@@ -337,6 +364,52 @@ class LocalFirestoreEngine:
             if not self.get_doc("plans", plan["plan_id"]):
                 self.set_doc("plans", plan["plan_id"], plan)
 
+        # Default Demo Business Tenant
+        tenant_id = "tenant_demo"
+        if not self.get_doc("tenants", tenant_id):
+            self.set_doc("tenants", tenant_id, {
+                "tenant_id": tenant_id,
+                "business_name": "Acme Global Tech",
+                "owner_email": "owner@acme.com",
+                "owner_password": generate_password_hash("OwnerPassword123!"),
+                "status": "active",
+                "current_plan_id": "plan_pro",
+                "subscription_start": "2026-01-01T00:00:00Z",
+                "subscription_end": "2027-12-31T23:59:59Z",
+                "razorpay_subscription_id": "sub_demo_acme_123",
+                "geofence": {
+                    "latitude": 17.385044,
+                    "longitude": 78.486671,
+                    "radius_meters": 200.0,
+                    "address": "Main Office Tech Park"
+                },
+                "shifts": [
+                    {
+                        "shift_id": "shift_morning",
+                        "name": "General Morning Shift",
+                        "start_time": "09:00",
+                        "end_time": "18:00",
+                        "grace_period_mins": 15
+                    }
+                ],
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+
+        # Default Employee for Demo Tenant
+        emp_id = "emp_001"
+        emp_path = "tenants/tenant_demo/employees"
+        if not self.get_doc(emp_path, emp_id):
+            self.set_doc(emp_path, emp_id, {
+                "employee_id": emp_id,
+                "full_name": "John Doe",
+                "email": "john@acme.com",
+                "unique_emp_code": "EMP-1001",
+                "phone": "+91-9876543210",
+                "shift_id": "shift_morning",
+                "status": "active",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+
 class LocalStorageEngine:
     def blob(self, blob_path):
         return LocalBlob(blob_path)
@@ -347,21 +420,44 @@ class LocalBlob:
         self.public_url = f"/static/uploads/{os.path.basename(blob_path)}"
         
     def upload_from_string(self, content_bytes, content_type='image/jpeg'):
-        uploads_dir = os.path.join(Config.BASE_DIR, 'static', 'uploads')
-        os.makedirs(uploads_dir, exist_ok=True)
-        file_path = os.path.join(uploads_dir, os.path.basename(self.blob_path))
-        with open(file_path, 'wb') as f:
-            f.write(content_bytes)
+        import tempfile
+        try:
+            uploads_dir = os.path.join(Config.BASE_DIR, 'static', 'uploads')
+            os.makedirs(uploads_dir, exist_ok=True)
+            file_path = os.path.join(uploads_dir, os.path.basename(self.blob_path))
+            with open(file_path, 'wb') as f:
+                f.write(content_bytes)
+        except Exception:
+            try:
+                tmp_dir = os.path.join(tempfile.gettempdir(), 'uploads')
+                os.makedirs(tmp_dir, exist_ok=True)
+                file_path = os.path.join(tmp_dir, os.path.basename(self.blob_path))
+                with open(file_path, 'wb') as f:
+                    f.write(content_bytes)
+            except Exception:
+                pass
 
     def upload_from_filename(self, filename):
-        uploads_dir = os.path.join(Config.BASE_DIR, 'static', 'uploads')
-        os.makedirs(uploads_dir, exist_ok=True)
-        file_path = os.path.join(uploads_dir, os.path.basename(self.blob_path))
-        with open(filename, 'rb') as src, open(file_path, 'wb') as dst:
-            dst.write(src.read())
+        import tempfile
+        try:
+            uploads_dir = os.path.join(Config.BASE_DIR, 'static', 'uploads')
+            os.makedirs(uploads_dir, exist_ok=True)
+            file_path = os.path.join(uploads_dir, os.path.basename(self.blob_path))
+            with open(filename, 'rb') as src, open(file_path, 'wb') as dst:
+                dst.write(src.read())
+        except Exception:
+            try:
+                tmp_dir = os.path.join(tempfile.gettempdir(), 'uploads')
+                os.makedirs(tmp_dir, exist_ok=True)
+                file_path = os.path.join(tmp_dir, os.path.basename(self.blob_path))
+                with open(filename, 'rb') as src, open(file_path, 'wb') as dst:
+                    dst.write(src.read())
+            except Exception:
+                pass
 
     def make_public(self):
         pass
 
 # Initialize Firebase on import
 init_firebase()
+

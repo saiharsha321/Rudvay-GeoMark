@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Pricing Plans | GeoMark Powered by Rudvay Tech{% endblock %}
+
+{% block content %}
+<div class="space-y-12 py-6">
+    <div class="text-center max-w-3xl mx-auto space-y-4">
+        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">SIMPLE PRICING</span>
+        <h1 class="text-4xl font-extrabold text-slate-900">Predictable SaaS Plans for Growing Businesses</h1>
+        <p class="text-sm text-slate-600">Choose the perfect plan for your workforce size. All plans include 10m Geofence GPS tracking and Biometric verification.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Starter Plan -->
+        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 flex flex-col justify-between">
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">Starter</h3>
+                <p class="text-xs text-slate-500">Ideal for small office teams and startups.</p>
+                <div class="text-3xl font-extrabold text-slate-900">₹999 <span class="text-xs text-slate-400 font-normal">/ month</span></div>
+                <ul class="space-y-2.5 text-xs text-slate-600 border-t border-slate-100 pt-4">
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-500 mr-2"></i> Up to 25 Employees</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-500 mr-2"></i> 10m Geofence GPS Checking</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-500 mr-2"></i> WebRTC Camera Biometrics</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-500 mr-2"></i> Basic Reports CSV Export</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('tenant.login') }}" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs text-center">Start Free Trial</a>
+        </div>
+
+        <!-- Growth Plan -->
+        <div class="bg-slate-950 text-white p-8 rounded-3xl border-2 border-emerald-500 shadow-xl space-y-6 flex flex-col justify-between relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-emerald-500 text-slate-950 font-extrabold text-[10px] uppercase px-3 py-1 rounded-bl-xl tracking-wider">MOST POPULAR</div>
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-white">Growth</h3>
+                <p class="text-xs text-slate-400">Perfect for multi-branch growing companies.</p>
+                <div class="text-3xl font-extrabold text-emerald-400">₹2,499 <span class="text-xs text-slate-400 font-normal">/ month</span></div>
+                <ul class="space-y-2.5 text-xs text-slate-300 border-t border-slate-800 pt-4">
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Up to 100 Employees</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Unlimited Branches & Depts</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Real-Time Chart.js Dashboard</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Immutable Audit Logs</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-400 mr-2"></i> Priority Email Support</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('tenant.login') }}" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-2xl text-xs text-center shadow-lg shadow-emerald-950">Get Growth Plan</a>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 flex flex-col justify-between">
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">Enterprise</h3>
+                <p class="text-xs text-slate-500">Custom scale for large enterprises & field forces.</p>
+                <div class="text-3xl font-extrabold text-slate-900">Custom</div>
+                <ul class="space-y-2.5 text-xs text-slate-600 border-t border-slate-100 pt-4">
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-500 mr-2"></i> Unlimited Employees</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-500 mr-2"></i> Dedicated Cloud Firestore Instance</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-500 mr-2"></i> SLA 99.9% Uptime Agreement</li>
+                    <li class="flex items-center"><i class="fas fa-check text-emerald-500 mr-2"></i> Dedicated Rudvay Tech Manager</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('public.contact') }}" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-xs text-center">Contact Sales</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

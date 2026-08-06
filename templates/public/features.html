@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Features | GeoMark Powered by Rudvay Tech{% endblock %}
+
+{% block content %}
+<div class="space-y-12 py-6">
+    <div class="text-center max-w-3xl mx-auto space-y-4">
+        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">FEATURES OVERVIEW</span>
+        <h1 class="text-4xl font-extrabold text-slate-900">Complete Workforce Presence Platform</h1>
+        <p class="text-sm text-slate-600 leading-relaxed">
+            Discover how GeoMark combines satellite location tracking, facial biometrics, and automated audit logs to deliver unmatched attendance accuracy.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Feature 1 -->
+        <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                <i class="fas fa-location-crosshairs"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900">10-Meter Satellite Geofencing</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Configure workplace perimeters using interactive Leaflet maps with precision controls down to 10 meters. Server-side Haversine mathematical evaluation guarantees employees punch within approved physical boundaries.
+            </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                <i class="fas fa-face-smile"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900">WebRTC Biometric Face Recognition</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Client-side LBP (Local Binary Pattern) feature extraction computes 128-dimensional facial vectors right inside the browser camera stream, comparing descriptors in &lt; 12ms.
+            </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900">Shift Roster & Grace Period Engine</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Define multiple work shifts, flexible grace periods, overtime thresholds, and weekend policies. Automatically calculate late minutes and half-day statuses.
+            </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+                <i class="fas fa-shield-cat"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900">Immutable Audit Logs & Compliance</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Every administrative edit, manual attendance override, or report export is recorded in an immutable audit trail document complete with actor email, action code, and timestamp.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

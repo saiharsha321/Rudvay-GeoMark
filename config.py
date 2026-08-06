@@ -37,3 +37,10 @@ class Config:
     ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin@system.local')
     ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'SuperAdminPassword123!')
 
+    # Session Cookie Security & Protection
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SECURE = os.environ.get('USE_HTTPS', '').lower() in ['1', 'true'] or bool(os.environ.get('VERCEL'))
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    PERMANENT_SESSION_LIFETIME = 86400  # 24 Hours
+
+

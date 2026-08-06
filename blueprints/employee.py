@@ -12,9 +12,51 @@ from utils.time_utils import get_ist_now, get_ist_today_str, get_ist_iso
 
 from utils.face_utils import compare_face_descriptors, FACE_SIMILARITY_THRESHOLD
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 employee_bp = Blueprint('employee', __name__, url_prefix='/punch')
+upload_executor = ThreadPoolExecutor(max_workers=4)
+
+def process_async_photo_upload(tenant_id, employee_id, att_id, punch_type, photo_b64, now_dt):
+    """Background task to upload photo to Cloudinary/Firebase Storage and update attendance record."""
+    try:
+        photo_url = ""
+        c_url = upload_to_cloudinary(photo_b64, folder=f"punch_photos/{tenant_id}/{employee_id}")
+        if c_url:
+            photo_url = c_url
+        else:
+            try:
+                encoded = photo_b64.split(',', 1)[1] if ',' in photo_b64 else photo_b64
+                img_bytes = base64.b64decode(encoded)
+                timestamp = now_dt.strftime("%Y%m%d_%H%M%S")
+                blob_path = f"punch_photos/{tenant_id}/{employee_id}/{timestamp}_{punch_type}.jpg"
+                
+                if bucket and hasattr(bucket, 'blob'):
+                    blob = bucket.blob(blob_path)
+                    blob.upload_from_string(img_bytes, content_type='image/jpeg')
+                    try:
+                        blob.make_public()
+                    except Exception:
+                        pass
+                    photo_url = getattr(blob, 'public_url', f"/static/uploads/{os.path.basename(blob_path)}")
+                else:
+                    raise ValueError("No active storage bucket")
+            except Exception as e:
+                logger.warning(f"Async photo upload error: {e}")
+                local_filename = f"{now_dt.strftime('%Y%m%d_%H%M%S')}_{punch_type}.jpg"
+                local_dir = os.path.join(Config.BASE_DIR, 'static', 'uploads', tenant_id, employee_id)
+                os.makedirs(local_dir, exist_ok=True)
+                local_path = os.path.join(local_dir, local_filename)
+                with open(local_path, 'wb') as f:
+                    f.write(img_bytes)
+                photo_url = f"/static/uploads/{tenant_id}/{employee_id}/{local_filename}"
+
+        if photo_url:
+            field = 'punch_in_photo_url' if punch_type == 'in' else 'punch_out_photo_url'
+            db.collection(f'tenants/{tenant_id}/attendance').document(att_id).update({field: photo_url})
+    except Exception as err:
+        logger.error(f"Async photo upload job failed: {err}")
 
 def find_employee_by_code_or_email(identifier):
     """
@@ -246,48 +288,13 @@ def submit_punch():
             'radius_meters': radius_meters
         }), 400
 
-    # Process Photo Upload to Cloudinary, Firebase Storage, or local fallback
-    photo_url = ""
+    today_str = get_ist_today_str()
+    att_id = f"att_{employee_id}_{today_str}"
+
+    # Process Photo Upload asynchronously in background thread
+    photo_url = "/static/uploads/default_punch.jpg"
     if photo_b64:
-        # 1. Try Cloudinary Upload
-        c_url = upload_to_cloudinary(photo_b64, folder=f"punch_photos/{tenant_id}/{employee_id}")
-        if c_url:
-            photo_url = c_url
-        else:
-            # 2. Try Firebase Storage / Local Engine / Disk Fallback
-            try:
-                if ',' in photo_b64:
-                    header, encoded = photo_b64.split(',', 1)
-                else:
-                    encoded = photo_b64
-                img_bytes = base64.b64decode(encoded)
-                
-                timestamp = now_dt.strftime("%Y%m%d_%H%M%S")
-                blob_path = f"punch_photos/{tenant_id}/{employee_id}/{timestamp}_{punch_type}.jpg"
-                
-                if bucket and hasattr(bucket, 'blob'):
-                    blob = bucket.blob(blob_path)
-                    blob.upload_from_string(img_bytes, content_type='image/jpeg')
-                    try:
-                        blob.make_public()
-                    except Exception:
-                        pass
-                    photo_url = getattr(blob, 'public_url', f"/static/uploads/{os.path.basename(blob_path)}")
-                else:
-                    raise ValueError("No active cloud storage bucket")
-            except Exception as e:
-                logger.warning(f"Cloud photo upload error: {e}. Saving photo to local disk storage.")
-                try:
-                    local_filename = f"{timestamp}_{punch_type}.jpg"
-                    local_dir = os.path.join(Config.BASE_DIR, 'static', 'uploads', tenant_id, employee_id)
-                    os.makedirs(local_dir, exist_ok=True)
-                    local_path = os.path.join(local_dir, local_filename)
-                    with open(local_path, 'wb') as f:
-                        f.write(img_bytes)
-                    photo_url = f"/static/uploads/{tenant_id}/{employee_id}/{local_filename}"
-                except Exception as file_err:
-                    logger.error(f"Local photo save error: {file_err}")
-                    photo_url = "/static/uploads/default_punch.jpg"
+        upload_executor.submit(process_async_photo_upload, tenant_id, employee_id, att_id, punch_type, photo_b64, now_dt)
             
     # Shift timing evaluation
     emp_doc = db.collection(f'tenants/{tenant_id}/employees').document(employee_id).get()

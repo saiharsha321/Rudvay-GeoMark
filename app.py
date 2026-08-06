@@ -15,11 +15,13 @@ def create_app():
     init_firebase()
 
     # Register Blueprints
+    from blueprints.public import public_bp
     from blueprints.admin import admin_bp
     from blueprints.tenant import tenant_bp
     from blueprints.employee import employee_bp
     from blueprints.api import api_bp
 
+    app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(tenant_bp)
     app.register_blueprint(employee_bp)
@@ -38,10 +40,6 @@ def create_app():
                 'measurementId': app.config.get('FIREBASE_MEASUREMENT_ID')
             }
         }
-
-    @app.route('/')
-    def index():
-        return render_template('employee/punch.html')
 
     @app.errorhandler(404)
     def page_not_found(e):

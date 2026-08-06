@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime, timezone, date
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from firebase_config import db, create_firebase_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from firebase_config import db, create_firebase_user, verify_firebase_token
 from utils.razorpay_utils import create_subscription_api
 from utils.time_utils import get_ist_now, get_ist_today_str, get_ist_iso
 
@@ -27,6 +28,86 @@ def inject_tenant():
     return {'tenant': {}}
 
 
+@tenant_bp.route('/firebase-auth', methods=['POST'])
+def firebase_auth():
+    data = request.get_json(silent=True) or request.form
+    id_token = data.get('idToken')
+    email = (data.get('email') or '').strip().lower()
+    display_name = data.get('displayName') or ''
+    business_name = (data.get('businessName') or '').strip()
+    is_google = bool(data.get('isGoogle'))
+
+    if not email:
+        return jsonify({'success': False, 'message': 'Missing user email identifier.'}), 400
+
+    # Verify token if present
+    decoded_token = verify_firebase_token(id_token) if id_token else None
+
+    # Check if tenant exists for this email
+    existing = db.collection('tenants').where('owner_email', '==', email).get()
+    
+    if existing:
+        t_data = existing[0].to_dict()
+        if t_data.get('status') == 'blocked':
+            return jsonify({'success': False, 'message': 'Account is blocked by Super Admin.'}), 403
+            
+        tenant_id = t_data.get('tenant_id')
+        tenant_name = t_data.get('business_name')
+    else:
+        # Auto-provision new tenant account via Google OAuth or Firebase Auth
+        tenant_id = f"tenant_{uuid.uuid4().hex[:8]}"
+        now_str = datetime.now(timezone.utc).isoformat()
+        tenant_name = business_name or (f"{display_name}'s Enterprise" if display_name else f"{email.split('@')[0]} Org")
+        
+        plans = db.collection('plans').get()
+        default_plan_id = plans[0].id if plans else 'plan_starter'
+        
+        tenant_data = {
+            'tenant_id': tenant_id,
+            'business_name': tenant_name,
+            'owner_email': email,
+            'owner_password': generate_password_hash(uuid.uuid4().hex),
+            'status': 'active',
+            'auth_provider': 'google' if is_google else 'firebase',
+            'current_plan_id': default_plan_id,
+            'subscription_start': now_str,
+            'subscription_end': '2027-12-31T23:59:59Z',
+            'razorpay_subscription_id': f"sub_google_{uuid.uuid4().hex[:6]}",
+            'geofence': {
+                'latitude': 17.385044,
+                'longitude': 78.486671,
+                'radius_meters': 200.0,
+                'address': 'Main HQ Location'
+            },
+            'shifts': [
+                {
+                    'shift_id': 'shift_default',
+                    'name': 'Standard Shift',
+                    'start_time': '09:00',
+                    'end_time': '18:00',
+                    'grace_period_mins': 15
+                }
+            ],
+            'created_at': now_str
+        }
+        
+        if decoded_token and decoded_token.get('uid'):
+            tenant_data['firebase_uid'] = decoded_token['uid']
+            
+        db.collection('tenants').document(tenant_id).set(tenant_data)
+        
+    session['tenant_owner_logged_in'] = True
+    session['tenant_id'] = tenant_id
+    session['tenant_name'] = tenant_name
+    session['owner_email'] = email
+    
+    return jsonify({
+        'success': True,
+        'message': f"Welcome back to {tenant_name}!",
+        'redirect': url_for('tenant.dashboard')
+    })
+
+
 @tenant_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if is_tenant_logged_in():
@@ -39,8 +120,21 @@ def login():
         tenants = db.collection('tenants').where('owner_email', '==', email).get()
         if tenants:
             t_data = tenants[0].to_dict()
-            stored_pwd = t_data.get('owner_password')
-            if stored_pwd == password or password == 'OwnerPassword123!': # demo override
+            stored_pwd = t_data.get('owner_password', '')
+            
+            # Secure password verification supporting pbkdf2 hashes with smooth legacy plain text upgrade
+            is_valid = False
+            if stored_pwd.startswith('pbkdf2:') or stored_pwd.startswith('scrypt:'):
+                is_valid = check_password_hash(stored_pwd, password)
+            else:
+                is_valid = (stored_pwd == password)
+                if is_valid:
+                    # Upgrade legacy plain text password to secure hash in DB
+                    db.collection('tenants').document(t_data['tenant_id']).update({
+                        'owner_password': generate_password_hash(password)
+                    })
+
+            if is_valid:
                 if t_data.get('status') == 'blocked':
                     flash('Account is blocked by Super Admin. Please contact support.', 'danger')
                     return render_template('portal/login.html')
@@ -85,7 +179,7 @@ def register():
             'tenant_id': tenant_id,
             'business_name': business_name,
             'owner_email': owner_email,
-            'owner_password': password,
+            'owner_password': generate_password_hash(password),
             'status': 'active',
             'current_plan_id': default_plan_id,
             'subscription_start': now_str,

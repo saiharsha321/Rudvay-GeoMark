@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}GeoFence Attendance System{% endblock %}</title>
+    <title>{% block title %}GeoMark | Smart Attendance. Precise Location.{% endblock %}</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,12 +12,12 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f0f3ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                            900: '#312e81',
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
                         }
                     }
                 }
@@ -29,7 +29,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
@@ -40,6 +40,8 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
     </style>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Firebase JS SDK Config -->
     <script>
         window.firebaseConfig = {{ firebase_config | tojson | safe if firebase_config else '{}' }};
@@ -48,75 +50,60 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
     <!-- Navigation Bar -->
-    <nav class="bg-slate-900 text-white shadow-lg border-b border-slate-800 sticky top-0 z-40">
+    <nav class="bg-slate-950 text-white shadow-lg border-b border-slate-800/80 sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <a href="/" class="flex items-center space-x-2 text-xl font-bold tracking-tight text-white">
-                        <span class="p-2 bg-indigo-600 rounded-lg text-white shadow-md">
-                            <i class="fas fa-location-crosshairs"></i>
-                        </span>
-                        <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">GeoAttend</span>
+                <!-- GeoMark Brand Logo -->
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="flex items-center">
+                        {% set logo_variant = 'horizontal' %}{% set logo_dark = true %}
+                        {% include "components/logo.html" %}
                     </a>
+
+                    <!-- Public Marketing Nav Links -->
+                    <div class="hidden md:flex items-center space-x-5 text-sm font-medium text-slate-300">
+                        <a href="{{ url_for('public.features') }}" class="hover:text-emerald-400 transition-colors">Features</a>
+                        <a href="{{ url_for('public.solutions') }}" class="hover:text-emerald-400 transition-colors">Solutions</a>
+                        <a href="{{ url_for('public.pricing') }}" class="hover:text-emerald-400 transition-colors">Pricing</a>
+                        <a href="{{ url_for('public.about') }}" class="hover:text-emerald-400 transition-colors">About Us</a>
+                        <a href="{{ url_for('public.contact') }}" class="hover:text-emerald-400 transition-colors">Contact</a>
+                    </div>
                 </div>
 
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3">
                     {% if session.get('is_admin') %}
-                        <a href="{{ url_for('admin.dashboard') }}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-chart-pie mr-1.5 text-indigo-400"></i> Admin Dashboard
+                        <a href="{{ url_for('admin.dashboard') }}" class="px-3 py-2 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-chart-pie mr-1 text-emerald-400"></i> Admin
                         </a>
-                        <a href="{{ url_for('admin.tenants') }}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-building mr-1.5 text-indigo-400"></i> Tenants
-                        </a>
-                        <a href="{{ url_for('admin.plans') }}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-tags mr-1.5 text-indigo-400"></i> Plans
+                        <a href="{{ url_for('admin.tenants') }}" class="px-3 py-2 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
+                            <i class="fas fa-building mr-1 text-emerald-400"></i> Tenants
                         </a>
                         <a href="{{ url_for('admin.logout') }}" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white">
-                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                            Logout
                         </a>
                     {% elif session.get('tenant_owner_logged_in') and session.get('tenant_id') %}
                         <a href="{{ url_for('tenant.dashboard') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-table-cells mr-1 text-indigo-400"></i> Dashboard
+                            <i class="fas fa-table-cells mr-1 text-emerald-400"></i> Dashboard
                         </a>
                         <a href="{{ url_for('tenant.geofence') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-map-marked-alt mr-1 text-indigo-400"></i> Geofence
+                            <i class="fas fa-map-marked-alt mr-1 text-emerald-400"></i> Geofence
                         </a>
                         <a href="{{ url_for('tenant.employees') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-users mr-1 text-indigo-400"></i> Employees
-                        </a>
-                        <a href="{{ url_for('tenant.branches') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-building mr-1 text-indigo-400"></i> Branches
-                        </a>
-                        <a href="{{ url_for('tenant.departments') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-layer-group mr-1 text-indigo-400"></i> Depts
-                        </a>
-                        <a href="{{ url_for('tenant.shifts') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-clock mr-1 text-indigo-400"></i> Shifts
-                        </a>
-                        <a href="{{ url_for('tenant.leave') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-calendar-xmark mr-1 text-indigo-400"></i> Leave
+                            <i class="fas fa-users mr-1 text-emerald-400"></i> Employees
                         </a>
                         <a href="{{ url_for('tenant.reports') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-file-invoice mr-1 text-indigo-400"></i> Reports
-                        </a>
-                        <a href="{{ url_for('tenant.audit_logs') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-shield-cat mr-1 text-indigo-400"></i> Audit
-                        </a>
-                        <a href="{{ url_for('tenant.billing') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800">
-                            <i class="fas fa-credit-card mr-1 text-indigo-400"></i> Billing
+                            <i class="fas fa-file-invoice mr-1 text-emerald-400"></i> Reports
                         </a>
                         <a href="{{ url_for('tenant.logout') }}" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white">
-                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                            Logout
                         </a>
                     {% else %}
-                        <a href="{{ url_for('employee.punch_page') }}" class="px-3 py-2 rounded-md text-sm font-medium text-indigo-300 hover:text-white">
-                            <i class="fas fa-mobile-screen-button mr-1.5"></i> Employee Punch
+                        <a href="{{ url_for('employee.punch_page') }}" class="px-3 py-2 rounded-xl text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 hover:bg-emerald-900/80 transition-all">
+                            <i class="fas fa-mobile-screen-button mr-1"></i> Employee Kiosk
                         </a>
-                        <a href="{{ url_for('tenant.login') }}" class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md">
-                            <i class="fas fa-user-tie mr-1.5"></i> Owner Portal
-                        </a>
-                        <a href="{{ url_for('admin.login') }}" class="px-3 py-2 rounded-md text-xs font-medium text-slate-400 hover:text-slate-200">
-                            Super Admin
+                        <a href="{{ url_for('tenant.login') }}" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 hover:bg-emerald-600 text-slate-950 transition-all shadow-md shadow-emerald-900/30 flex items-center">
+                            <span>Get Started</span>
+                            <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
                         </a>
                     {% endif %}
                 </div>
@@ -154,10 +141,74 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-slate-900 border-t border-slate-800 text-slate-400 py-6 mt-12">
-        <div class="max-w-7xl mx-auto px-4 text-center text-sm">
-            <p>&copy; 2026 GeoFence Attendance Systems. Enterprise Multi-Tenant Solution.</p>
+    <!-- Professional Multi-Column Footer Matching Brand Guide -->
+    <footer class="bg-slate-950 text-slate-400 border-t border-slate-900 pt-12 pb-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-8 pb-10 border-b border-slate-800/80">
+                <!-- Column 1: Brand & Tagline -->
+                <div class="md:col-span-2 space-y-4">
+                    <a href="/">
+                        {% set logo_variant = 'full' %}{% set logo_dark = true %}
+                        {% include "components/logo.html" %}
+                    </a>
+                    <p class="text-xs text-slate-400 max-w-sm leading-relaxed">
+                        A smarter way to manage presence. Enterprise 10-meter high-precision GPS geofencing, facial biometric verification, and automated shift rostering for modern workplaces.
+                    </p>
+                    <div class="flex items-center space-x-3 text-sm text-slate-400 pt-2">
+                        <a href="https://rudvay.tech" target="_blank" class="w-8 h-8 rounded-full bg-slate-900 hover:bg-emerald-950 hover:text-emerald-400 flex items-center justify-center transition-all border border-slate-800">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://rudvay.tech" target="_blank" class="w-8 h-8 rounded-full bg-slate-900 hover:bg-emerald-950 hover:text-emerald-400 flex items-center justify-center transition-all border border-slate-800">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="https://rudvay.tech" target="_blank" class="w-8 h-8 rounded-full bg-slate-900 hover:bg-emerald-950 hover:text-emerald-400 flex items-center justify-center transition-all border border-slate-800">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Column 2: Product Links -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-200">Product</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="{{ url_for('public.features') }}" class="hover:text-emerald-400 transition-colors">Features</a></li>
+                        <li><a href="{{ url_for('public.solutions') }}" class="hover:text-emerald-400 transition-colors">Solutions</a></li>
+                        <li><a href="{{ url_for('public.pricing') }}" class="hover:text-emerald-400 transition-colors">Pricing Plans</a></li>
+                        <li><a href="{{ url_for('employee.punch_page') }}" class="hover:text-emerald-400 transition-colors">Employee Kiosk</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Company Links -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-200">Company</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="{{ url_for('public.about') }}" class="hover:text-emerald-400 transition-colors">About Us</a></li>
+                        <li><a href="https://rudvay.tech" target="_blank" class="hover:text-emerald-400 transition-colors">Rudvay Tech Corporate</a></li>
+                        <li><a href="{{ url_for('public.contact') }}" class="hover:text-emerald-400 transition-colors">Contact Support</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 4: Legal & Compliance -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-200">Legal & Privacy</h4>
+                    <ul class="space-y-2 text-xs">
+                        <li><a href="{{ url_for('public.terms') }}" class="hover:text-emerald-400 transition-colors font-medium">Terms & Conditions</a></li>
+                        <li><a href="{{ url_for('public.privacy') }}" class="hover:text-emerald-400 transition-colors font-medium">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('public.privacy') }}#biometric-consent" class="hover:text-emerald-400 transition-colors">Biometric Consent</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Copyright & Powered by Rudvay Tech -->
+            <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+                <p>&copy; 2026 GeoMark. All rights reserved.</p>
+                <div class="flex items-center space-x-2">
+                    <span>Engineered with excellence by</span>
+                    <a href="https://rudvay.tech" target="_blank" class="inline-flex items-center font-bold text-slate-300 hover:text-emerald-400 transition-colors">
+                        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-emerald-400 text-[11px] font-mono mr-1">RUDVAY TECH</span>
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
 

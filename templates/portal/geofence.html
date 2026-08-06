@@ -60,10 +60,10 @@
                             <label class="font-semibold text-slate-700 text-xs">Perimeter Radius</label>
                             <span id="radius-display" class="font-bold text-indigo-600 text-sm">{{ geofence.radius_meters }}m</span>
                         </div>
-                        <input type="range" id="radius-slider" name="radius_meters" min="50" max="2000" step="25" value="{{ geofence.radius_meters }}"
+                        <input type="range" id="radius-slider" name="radius_meters" min="10" max="2000" step="5" value="{{ geofence.radius_meters }}"
                             class="w-full accent-indigo-600 cursor-pointer">
                         <div class="flex justify-between text-[10px] text-slate-400 mt-1">
-                            <span>50m</span>
+                            <span>10m (High Precision)</span>
                             <span>1000m</span>
                             <span>2000m</span>
                         </div>

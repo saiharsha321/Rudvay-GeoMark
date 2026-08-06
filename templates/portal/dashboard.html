@@ -4,6 +4,23 @@
 
 {% block content %}
 <div class="space-y-6">
+    <!-- Email Verification Alert Banner -->
+    <div id="email-verification-banner" class="bg-indigo-50/80 backdrop-blur-sm border border-indigo-100 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center space-x-3">
+            <span class="p-2.5 bg-indigo-600 text-white rounded-xl shadow-sm flex items-center justify-center">
+                <i class="fas fa-shield-halved text-base"></i>
+            </span>
+            <div>
+                <p class="text-sm font-bold text-slate-800">Firebase Authentication Active</p>
+                <p class="text-xs text-slate-500">Logged in as <span class="font-medium text-slate-700">{{ session.get('owner_email', tenant.owner_email) }}</span>.</p>
+            </div>
+        </div>
+        <button onclick="handleResendVerification()" class="px-3.5 py-2 bg-white hover:bg-slate-50 active:scale-95 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center space-x-1.5">
+            <i class="fas fa-paper-plane text-xs"></i>
+            <span>Resend Verification Email</span>
+        </button>
+    </div>
+
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
@@ -61,6 +78,29 @@
         </div>
     </div>
 
+    <!-- Visual Chart.js Analytics Panels -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 lg:col-span-1">
+            <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider mb-3 flex items-center justify-between">
+                <span>Today's Punch Ratio</span>
+                <i class="fas fa-chart-pie text-indigo-500"></i>
+            </h3>
+            <div class="relative h-56 flex items-center justify-center">
+                <canvas id="statusDoughnutChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2">
+            <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider mb-3 flex items-center justify-between">
+                <span>Attendance Status Volume</span>
+                <i class="fas fa-chart-column text-indigo-500"></i>
+            </h3>
+            <div class="relative h-56">
+                <canvas id="statusBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- Filters Bar -->
     <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
         <form method="GET" action="{{ url_for('tenant.dashboard') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
@@ -105,6 +145,17 @@
 
     <!-- Attendance Table -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+            <h3 class="text-base font-bold text-slate-900">Attendance Log Register</h3>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <i class="fas fa-search text-xs"></i>
+                </span>
+                <input type="text" id="instant-table-search" placeholder="Instant search log..." onkeyup="filterLogTable(this.value)"
+                    class="pl-9 pr-4 py-1.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-200 outline-none w-64">
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-slate-700">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase text-slate-500 border-b border-slate-200">
@@ -117,7 +168,7 @@
                         <th class="py-3 px-4">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody id="attendance-table-body" class="divide-y divide-slate-100">
                     {% for r in records %}
                     <tr class="hover:bg-slate-50">
                         <td class="py-3.5 px-4 font-semibold text-slate-900">{{ r.employee_name }}</td>
@@ -246,11 +297,77 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/auth.js') }}"></script>
 <script>
     function openPhotoModal(url, title) {
         document.getElementById('photo-modal-img').src = url;
         document.getElementById('photo-modal-title').innerText = title;
         document.getElementById('photo-modal').classList.remove('hidden');
     }
+
+    function filterLogTable(query) {
+        const term = query.toLowerCase().trim();
+        const rows = document.querySelectorAll('#attendance-table-body tr');
+        rows.forEach(r => {
+            const text = r.innerText.toLowerCase();
+            r.style.display = text.includes(term) ? '' : 'none';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const onTime = {{ stats.on_time_count }};
+        const late = {{ stats.late_count }};
+        const violations = {{ stats.violation_count }};
+        const totalEmp = {{ stats.total_employees }};
+        const unpunched = Math.max(0, totalEmp - (onTime + late));
+
+        // Doughnut Chart
+        const ctxDoughnut = document.getElementById('statusDoughnutChart');
+        if (ctxDoughnut && typeof Chart !== 'undefined') {
+            new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['On Time', 'Late', 'Geofence Alerts', 'Unpunched'],
+                    datasets: [{
+                        data: [onTime, late, violations, unpunched],
+                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#CBD5E1'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+                }
+            });
+        }
+
+        // Bar Chart
+        const ctxBar = document.getElementById('statusBarChart');
+        if (ctxBar && typeof Chart !== 'undefined') {
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['On Time', 'Late', 'Geofence Alerts', 'Total Active Employees'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [onTime, late, violations, totalEmp],
+                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#6366F1'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}

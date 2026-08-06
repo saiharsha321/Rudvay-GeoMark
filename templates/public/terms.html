@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Terms & Conditions | GeoMark Powered by Rudvay Tech{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 py-6 text-slate-800">
+    <!-- Header -->
+    <div class="border-b border-slate-200 pb-6 space-y-2">
+        <span class="px-3 py-1 rounded-full bg-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider">LEGAL AGREEMENT</span>
+        <h1 class="text-4xl font-extrabold text-slate-900">SaaS Terms & Conditions</h1>
+        <p class="text-xs text-slate-500">Effective Date: January 1, 2026 • Last Updated: August 7, 2026 • Governed by Rudvay Technology Solutions</p>
+    </div>
+
+    <!-- Document Content Body -->
+    <div class="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200 shadow-sm space-y-8 text-sm leading-relaxed text-slate-700">
+
+        <!-- Clause 1 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">1. Acceptance of Terms</h2>
+            <p>
+                These Terms & Conditions ("Agreement") constitute a legally binding contract between the subscriber or business entity ("Customer", "Tenant", or "You") and <strong>Rudvay Technology Solutions</strong> ("Rudvay Tech", "We", "Us", or "Our"), governing your access to and use of the <strong>GeoMark</strong> Software-as-a-Service application, mobile kiosks, APIs, and associated web interfaces (collectively, the "Service").
+            </p>
+            <p>
+                By registering a business tenant account, logging into the portal, or directing employees to use the Service, you confirm that you have read, understood, and agreed to be bound by these Terms and our <a href="{{ url_for('public.privacy') }}" class="text-emerald-600 font-bold hover:underline">Privacy Policy</a>.
+            </p>
+        </section>
+
+        <!-- Clause 2 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">2. Description of SaaS Service</h2>
+            <p>
+                GeoMark provides a multi-tenant cloud attendance and workforce presence management system. The Service enables Customers to establish 10-meter satellite geofence perimeters, capture WebRTC camera snapshots, compute client-side Local Binary Pattern (LBP) facial feature descriptors for identity verification, manage employee shift rosters, calculate late/overtime status, and export audit log reports.
+            </p>
+        </section>
+
+        <!-- Clause 3 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">3. Account Registration & Tenant Security</h2>
+            <p>
+                You represent and warrant that all registration details submitted (business name, owner email, phone number) are accurate and current. You are solely responsible for maintaining the confidentiality of your administrative credentials and for all activities conducted under your tenant workspace. Rudvay Tech shall not be liable for losses resulting from unauthorized account access caused by failure to secure login credentials.
+            </p>
+        </section>
+
+        <!-- Clause 4 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">4. Employer Responsibilities for Employee Biometric & Location Consent</h2>
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 text-xs text-amber-900 space-y-2 rounded-r-xl">
+                <p class="font-bold uppercase tracking-wider"><i class="fas fa-gavel mr-1"></i> CRITICAL COMPLIANCE OBLIGATION</p>
+                <p>
+                    The Customer acknowledges and agrees that it acts as the primary <strong>Data Fiduciary / Controller</strong> regarding employee personal data processed through the Service.
+                </p>
+            </div>
+            <p>
+                You explicitly undertake to obtain prior, informed, and explicit written consent from all employees, contractors, and staff before requiring or permitting them to submit GPS location coordinates or camera facial images through GeoMark. You represent that your data processing complies fully with applicable data protection laws, including the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act, India)</strong>, the <strong>General Data Protection Regulation (GDPR)</strong>, and local labor regulations.
+            </p>
+        </section>
+
+        <!-- Clause 5 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">5. Subscriptions, Payments & Razorpay Billing</h2>
+            <p>
+                Access to premium features, employee count expansions, and automated reports requires an active paid subscription tier processed securely via <strong>Razorpay</strong>. Subscriptions are billed in advance on a recurring monthly or annual basis. All fees are non-refundable except as explicitly required by law. Rudvay Tech reserves the right to modify subscription pricing upon 30 days' advance notice to Customer.
+            </p>
+        </section>
+
+        <!-- Clause 6 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">6. Service Availability & Service Level Agreement (SLA)</h2>
+            <p>
+                Rudvay Tech employs high-availability cloud infrastructure (Google Cloud Firestore and edge servers) aiming for a <strong>99.9% Service Uptime Target</strong>. However, We do not warrant that the Service will be uninterrupted or error-free. Scheduled system maintenance will be communicated in advance. We are not liable for attendance submission delays caused by client-side network outage, browser permission blocks, or hardware failure.
+            </p>
+        </section>
+
+        <!-- Clause 7 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">7. Intellectual Property Rights</h2>
+            <p>
+                All rights, titles, and interests in and to the GeoMark application, software code, algorithms, visual trademarks, logos, and documentation remain the exclusive intellectual property of <strong>Rudvay Technology Solutions</strong>. Customer retains full ownership of its underlying attendance records, employee rosters, and operational data uploaded to the Service.
+            </p>
+        </section>
+
+        <!-- Clause 8 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">8. Limitation of Liability & Indemnification</h2>
+            <p>
+                To the maximum extent permitted by law, in no event shall Rudvay Tech, its directors, or employees be liable for indirect, incidental, consequential, or punitive damages (including loss of profits, business disruption, or labor disputes). Rudvay Tech's total aggregate liability arising out of this Agreement shall not exceed the actual fees paid by Customer to Rudvay Tech in the three (3) months preceding the incident.
+            </p>
+            <p>
+                Customer agrees to indemnify and hold harmless Rudvay Tech against any legal claims, fines, or regulatory penalties arising from Customer's failure to obtain mandatory employee biometric or location consent.
+            </p>
+        </section>
+
+        <!-- Clause 9 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">9. Data Retention & Account Termination</h2>
+            <p>
+                Either party may terminate this Agreement at any time by cancelling the subscription through the Owner Portal or contacting support. Upon account termination, Customer attendance data will be retained for thirty (30) days to allow data export, after which it may be permanently purged from active Cloud Firestore databases.
+            </p>
+        </section>
+
+        <!-- Clause 10 -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">10. Governing Law & Jurisdiction</h2>
+            <p>
+                This Agreement shall be governed by and construed in accordance with the laws of the <strong>Republic of India</strong>, without regard to conflict of law principles. Any legal suit, action, or proceeding arising out of these Terms shall be instituted exclusively in the competent courts located in <strong>Hyderabad, Telangana, India</strong>.
+            </p>
+        </section>
+
+        <!-- Contact Section -->
+        <div class="pt-6 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+            <p><strong>Legal Inquiries & Notice Address:</strong></p>
+            <p>Rudvay Technology Solutions • Attn: Legal Department</p>
+            <p>Email: <a href="mailto:legal@rudvay.tech" class="text-emerald-600 font-bold hover:underline">legal@rudvay.tech</a> • Website: <a href="https://rudvay.tech" target="_blank" class="text-emerald-600 font-bold hover:underline">https://rudvay.tech</a></p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

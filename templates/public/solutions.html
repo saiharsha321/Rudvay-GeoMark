@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Industry Solutions | GeoMark Powered by Rudvay Tech{% endblock %}
+
+{% block content %}
+<div class="space-y-12 py-6">
+    <div class="text-center max-w-3xl mx-auto space-y-4">
+        <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold uppercase tracking-wider">TAILORED SOLUTIONS</span>
+        <h1 class="text-4xl font-extrabold text-slate-900">Workforce Tracking Built for Every Industry</h1>
+        <p class="text-sm text-slate-600">GeoMark solves presence verification challenges across office teams, field crews, and multi-location retail chains.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+            <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-building text-indigo-600 mr-2"></i> Corporate & Enterprise Offices</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Streamline corporate desk punch-ins with touchless camera biometrics and automatic Google SSO login.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+            <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-person-digging text-amber-600 mr-2"></i> Construction & Field Duty</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Enforce strict 10-meter site boundaries for field engineers and mobile teams with mobile GPS verification.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+            <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-hospital text-rose-600 mr-2"></i> Healthcare & Hospitals</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Manage complex 24/7 rotating nursing shifts, grace period rules, and biometric proof for medical staff.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+            <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-store text-emerald-600 mr-2"></i> Multi-Location Retail Chains</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">Set up distinct branch geofence perimeters for each retail store outlet with consolidated central owner reporting.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

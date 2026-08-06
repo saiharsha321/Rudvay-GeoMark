@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy | GeoMark Powered by Rudvay Tech{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 py-6 text-slate-800">
+    <!-- Header -->
+    <div class="border-b border-slate-200 pb-6 space-y-2">
+        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">DATA PROTECTION & PRIVACY</span>
+        <h1 class="text-4xl font-extrabold text-slate-900">Privacy Policy</h1>
+        <p class="text-xs text-slate-500">Effective Date: January 1, 2026 • Last Updated: August 7, 2026 • Issued by Rudvay Technology Solutions</p>
+    </div>
+
+    <!-- Document Content Body -->
+    <div class="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200 shadow-sm space-y-8 text-sm leading-relaxed text-slate-700">
+
+        <!-- Introduction -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">1. Overview & Commitment to Privacy</h2>
+            <p>
+                <strong>Rudvay Technology Solutions</strong> ("Rudvay Tech", "We", "Us") operates the <strong>GeoMark</strong> enterprise workforce presence management application. We are committed to safeguarding the privacy of business owners ("Tenants"), employees, and site visitors.
+            </p>
+            <p>
+                This Privacy Policy explains how personal data, location coordinates, and facial biometric feature descriptors are collected, processed, stored, and protected in compliance with the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act, India)</strong> and global data privacy standards.
+            </p>
+        </section>
+
+        <!-- Section 2: Biometric Data Policy -->
+        <section id="biometric-consent" class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">2. Biometric Data & Facial LBP Descriptor Handling</h2>
+            <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 text-xs text-emerald-900 space-y-2 rounded-r-xl">
+                <p class="font-bold uppercase tracking-wider"><i class="fas fa-shield-halved mr-1"></i> ZERO RAW BIOMETRIC HOARDING ARCHITECTURE</p>
+                <p>
+                    GeoMark does NOT store raw video streams or high-resolution facial images in permanent biometric databases.
+                </p>
+            </div>
+            <p>
+                When an employee performs a camera verification punch, client-side WebRTC technology extracts a mathematical <strong>Local Binary Pattern (LBP) feature vector</strong> (128 numerical values representing skin texture contrast). This mathematical array is compared against the stored enrollment vector to confirm identity.
+            </p>
+            <ul class="list-disc pl-5 space-y-1 text-xs text-slate-600">
+                <li>Biometric feature vectors cannot be reverse-engineered to reconstruct an individual's original face photo.</li>
+                <li>Biometric matching occurs strictly for authorized employee identity verification during attendance punches.</li>
+                <li>Biometric feature descriptors are never sold, rented, or shared with third-party advertising networks.</li>
+            </ul>
+        </section>
+
+        <!-- Section 3: GPS Location Data -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">3. GPS Geolocation Data Collection Limits</h2>
+            <p>
+                GeoMark requests access to the device's HTML5 Geolocation API (latitude, longitude, horizontal accuracy) <strong>ONLY at the explicit moment an employee taps "Punch In" or "Punch Out"</strong>.
+            </p>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+                <p class="font-bold text-slate-900"><i class="fas fa-ban text-rose-500 mr-1"></i> No Continuous Background Tracking</p>
+                <p class="text-slate-600">GeoMark does NOT track employee GPS locations in the background or monitor movement outside active punch events.</p>
+            </div>
+        </section>
+
+        <!-- Section 4: Data Processing Purposes -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">4. Purposes of Data Processing</h2>
+            <p>We process collected data exclusively to:</p>
+            <ul class="list-disc pl-5 space-y-1 text-xs text-slate-600">
+                <li>Verify employee presence within employer-configured 10-meter geofence perimeters.</li>
+                <li>Calculate working hours, late minutes, overtime, and shift compliance.</li>
+                <li>Generate downloadable attendance reports and immutable administrative audit logs.</li>
+                <li>Secure customer business tenant accounts and prevent unauthorized portal access.</li>
+            </ul>
+        </section>
+
+        <!-- Section 5: Data Security & Cloud Infrastructure -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">5. Cloud Security & Encryption</h2>
+            <p>
+                All data transmitted between browsers, mobile devices, and server endpoints is encrypted using <strong>TLS 1.3 / HTTPS encryption</strong>. Databases stored on <strong>Google Cloud Firestore</strong> utilize AES-256 encryption at rest. Administrative access requires authenticated session tokens and cryptographic password hashing (PBKDF2-SHA256).
+            </p>
+        </section>
+
+        <!-- Section 6: Data Rights -->
+        <section class="space-y-3">
+            <h2 class="text-lg font-bold text-slate-900">6. User Data Rights (DPDP Act & GDPR Compliance)</h2>
+            <p>Under applicable data privacy regulations, employees and business owners possess the right to:</p>
+            <ul class="list-disc pl-5 space-y-1 text-xs text-slate-600">
+                <li><strong>Right to Access:</strong> Request a copy of stored attendance records and logs.</li>
+                <li><strong>Right to Correction:</strong> Request correction of inaccurate employee profile details.</li>
+                <li><strong>Right to Erasure / Withdrawal:</strong> Request deletion of enrolled face feature descriptors upon employment termination.</li>
+            </ul>
+        </section>
+
+        <!-- Section 7: Data Protection Officer -->
+        <div class="pt-6 border-t border-slate-200 text-xs text-slate-500 space-y-2">
+            <p class="font-bold text-slate-900">7. Data Protection Officer (DPO) Contact</p>
+            <p>If you have questions regarding this Privacy Policy or wish to exercise data protection rights, please contact our Data Protection Officer:</p>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 font-mono text-slate-800">
+                <p>Data Protection Officer • Rudvay Technology Solutions</p>
+                <p>Email: <a href="mailto:privacy@rudvay.tech" class="text-emerald-600 font-bold hover:underline">privacy@rudvay.tech</a></p>
+                <p>Corporate Office: Hyderabad, Telangana, India</p>
+                <p>Official Website: <a href="https://rudvay.tech" target="_blank" class="text-emerald-600 font-bold hover:underline">https://rudvay.tech</a></p>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

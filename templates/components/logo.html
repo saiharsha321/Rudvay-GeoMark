@@ -1,0 +1,49 @@
+{% set is_dark = logo_dark | default(true) %}
+{% set is_full = logo_variant == 'full' %}
+{% set is_horizontal = logo_variant == 'horizontal' or logo_variant is not defined %}
+
+<div class="inline-flex items-center gap-2.5 group select-none">
+    <!-- GeoMark Pin + Checkmark Icon Emblem -->
+    <div class="relative flex-shrink-0 flex items-center justify-center w-9 h-9">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-md">
+            <defs>
+                <linearGradient id="geoPinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#0284C7" />
+                    <stop offset="50%" stop-color="#0D9488" />
+                    <stop offset="100%" stop-color="#10B981" />
+                </linearGradient>
+            </defs>
+            <!-- Location Pin Outer Ring forming G -->
+            <path d="M50 5 C30 5, 15 20, 15 40 C15 62, 42 90, 50 95 C58 90, 85 62, 85 40 C85 20, 70 5, 50 5 Z" fill="url(#geoPinGrad)" />
+            <!-- Inner Cutout -->
+            <circle cx="50" cy="38" r="22" fill="{% if is_dark %}#0F172A{% else %}#FFFFFF{% endif %}" />
+            <!-- Checkmark Symbol -->
+            <path d="M38 38 L47 47 L65 26" stroke="url(#geoPinGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+            <!-- Digital Pixel Accents (Top Left) -->
+            <rect x="8" y="12" width="6" height="6" rx="1.5" fill="#38BDF8" />
+            <rect x="16" y="8" width="6" height="6" rx="1.5" fill="#0D9488" />
+            <rect x="8" y="22" width="6" height="6" rx="1.5" fill="#10B981" />
+        </svg>
+    </div>
+
+    <!-- Brand Name & Subtext -->
+    <div class="flex flex-col text-left">
+        <div class="flex items-baseline">
+            <span class="font-extrabold tracking-tight text-xl {% if is_dark %}text-white{% else %}text-slate-900{% endif %}">
+                Geo<span class="text-emerald-400 font-black">Mark</span>
+            </span>
+        </div>
+        {% if is_full %}
+            <span class="text-[9px] font-extrabold tracking-widest uppercase text-emerald-400 leading-none mt-0.5">
+                SMART ATTENDANCE. PRECISE LOCATION.
+            </span>
+            <span class="text-[8px] font-semibold tracking-wider text-slate-400 uppercase mt-0.5">
+                POWERED BY <a href="https://rudvay.tech" target="_blank" class="text-indigo-400 hover:underline">RUDVAY TECH</a>
+            </span>
+        {% else %}
+            <span class="text-[8px] font-bold tracking-wider text-slate-400 uppercase leading-none">
+                POWERED BY <a href="https://rudvay.tech" target="_blank" class="text-indigo-400 hover:underline">RUDVAY TECH</a>
+            </span>
+        {% endif %}
+    </div>
+</div>

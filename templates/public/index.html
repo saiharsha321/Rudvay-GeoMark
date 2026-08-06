@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}GeoMark | Smart Attendance. Precise Location. Powered by Rudvay Tech{% endblock %}
+
+{% block content %}
+<div class="space-y-20 py-6">
+
+    <!-- Hero Section -->
+    <section class="relative bg-slate-950 text-white rounded-3xl p-8 sm:p-14 overflow-hidden border border-slate-800 shadow-2xl">
+        <!-- Background Gradient Blobs -->
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-6">
+                <!-- Badge -->
+                <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-semibold text-emerald-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span>NEXT-GEN ENTERPRISE ATTENDANCE SAAS</span>
+                    <span class="text-slate-500">•</span>
+                    <a href="https://rudvay.tech" target="_blank" class="hover:underline text-slate-300">BY RUDVAY TECH</a>
+                </div>
+
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+                    Smart Attendance. <br>
+                    <span class="bg-gradient-to-r from-teal-400 via-emerald-400 to-green-300 bg-clip-text text-transparent">Precise Location.</span>
+                </h1>
+
+                <p class="text-slate-300 text-base sm:text-lg leading-relaxed max-w-xl">
+                    A smarter way to manage presence. Eliminate proxy punching with <strong class="text-emerald-400">10-meter satellite geofencing</strong>, WebRTC facial biometrics, and real-time shift roster management.
+                </p>
+
+                <!-- Action CTAs -->
+                <div class="flex flex-wrap items-center gap-4 pt-2">
+                    <a href="{{ url_for('tenant.login') }}" class="px-7 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-xl shadow-emerald-950/50 transition-all active:scale-95 flex items-center">
+                        <span>Get Started Free</span>
+                        <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                    </a>
+                    <a href="{{ url_for('employee.punch_page') }}" class="px-7 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm border border-slate-800 transition-all flex items-center">
+                        <i class="fas fa-mobile-screen-button text-emerald-400 mr-2"></i>
+                        <span>Try Employee Kiosk</span>
+                    </a>
+                </div>
+
+                <!-- Trust Metrics -->
+                <div class="pt-6 border-t border-slate-800/80 grid grid-cols-3 gap-4 text-left">
+                    <div>
+                        <h4 class="text-2xl font-extrabold text-white">10m</h4>
+                        <p class="text-xs text-slate-400 font-medium">GPS Accuracy</p>
+                    </div>
+                    <div>
+                        <h4 class="text-2xl font-extrabold text-emerald-400">&lt; 12ms</h4>
+                        <p class="text-xs text-slate-400 font-medium">Biometric Matching</p>
+                    </div>
+                    <div>
+                        <h4 class="text-2xl font-extrabold text-white">99.9%</h4>
+                        <p class="text-xs text-slate-400 font-medium">Uptime Guarantee</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Interactive Preview Graphic -->
+            <div class="relative">
+                <div class="bg-gradient-to-tr from-slate-900 to-slate-900/90 rounded-3xl p-6 border border-slate-800 shadow-2xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                            <span class="text-xs font-mono text-slate-400 ml-2">geomark.rudvay.tech/kiosk</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">LIVE DEMO</span>
+                    </div>
+
+                    <!-- Mock Geofence Verification Card -->
+                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-white">Acme Corp HQ Geofence</span>
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/40 text-[11px] flex items-center gap-1">
+                                <i class="fas fa-check-circle"></i> Inside Fence (4.2m | ±8.1m)
+                            </span>
+                        </div>
+                        <div class="h-32 bg-slate-900 rounded-xl flex items-center justify-center relative overflow-hidden border border-slate-800">
+                            <!-- Radar Animation -->
+                            <div class="w-24 h-24 rounded-full border border-emerald-500/30 animate-ping absolute"></div>
+                            <div class="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center relative z-10 border border-emerald-400">
+                                <i class="fas fa-location-dot text-emerald-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Feature Showcase Grid -->
+    <section class="space-y-8 text-center">
+        <div class="max-w-2xl mx-auto space-y-3">
+            <h2 class="text-3xl font-extrabold text-slate-900">Engineered for Maximum Precision & Security</h2>
+            <p class="text-sm text-slate-500">GeoMark provides enterprise workforce management tools built on satellite geofencing and computer vision biometrics.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+            <!-- Feature 1 -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-4 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl font-bold">
+                    <i class="fas fa-location-crosshairs"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">10-Meter Geofencing</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Set precise workplace perimeters on Leaflet maps with custom radius constraints down to 10 meters. Server-side Haversine validation blocks location spoofing.
+                </p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-4 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                    <i class="fas fa-face-viewfinder"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">Biometric Face Verification</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Client-side Local Binary Pattern (LBP) feature extraction compares 128-dimensional facial descriptors in milliseconds with zero video storage overhead.
+                </p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-4 hover:shadow-md transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold">
+                    <i class="fas fa-chart-column"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">Real-Time Analytics</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Monitor attendance logs, late arrivals, overtime hours, and geofence alerts live with interactive Chart.js doughnut & bar visual graphs.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Powered by Rudvay Tech Callout -->
+    <section class="bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="space-y-3 max-w-xl text-left">
+            <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-mono border border-emerald-500/30">POWERED BY RUDVAY TECH</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Backed by Enterprise Engineering</h2>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                GeoMark is developed and maintained by <strong>Rudvay Technology Solutions</strong>, delivering cloud infrastructure, security compliance, and high-availability SaaS platforms across India.
+            </p>
+        </div>
+        <a href="https://rudvay.tech" target="_blank" class="px-6 py-3.5 rounded-2xl bg-white text-slate-950 font-extrabold text-xs hover:bg-slate-100 transition-all flex items-center flex-shrink-0 shadow-lg">
+            <span>Visit Rudvay Tech</span>
+            <i class="fas fa-external-link-alt ml-2"></i>
+        </a>
+    </section>
+
+</div>
+{% endblock %}

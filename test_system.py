@@ -99,6 +99,24 @@ class GeoFenceAttendanceSystemTests(unittest.TestCase):
             self.assertEqual(sub_res.status_code, 200, f"Failed rendering {path}")
             self.assertIn(b'Acme Global Tech', sub_res.data)
 
+    def test_firebase_auth_endpoint(self):
+        # Test Google / Firebase token authentication API endpoint
+        res = self.client.post('/portal/firebase-auth', json={
+            'email': 'new_google_owner@enterprise.com',
+            'displayName': 'Jane Google',
+            'businessName': 'Jane Corp',
+            'isGoogle': True
+        })
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data['success'])
+        self.assertIn('/portal/dashboard', data['redirect'])
+
+        # Verify session was created
+        dash_res = self.client.get('/portal/dashboard')
+        self.assertEqual(dash_res.status_code, 200)
+        self.assertIn(b'Jane Corp', dash_res.data)
+
     def test_reports_csv_export(self):
         # Login tenant owner first
         self.client.post('/portal/login', data={'email': 'owner@acme.com', 'password': 'OwnerPassword123!'})
@@ -196,6 +214,11 @@ class GeoFenceAttendanceSystemTests(unittest.TestCase):
         if not is_cloudinary_configured():
             url = upload_to_cloudinary(test_b64)
             self.assertIsNone(url)
+
+    def test_public_marketing_and_legal_pages(self):
+        for route in ['/', '/features', '/solutions', '/pricing', '/about', '/contact', '/terms', '/privacy']:
+            res = self.client.get(route)
+            self.assertEqual(res.status_code, 200, f"Route {route} failed to render with 200 OK")
 
 if __name__ == '__main__':
     unittest.main()

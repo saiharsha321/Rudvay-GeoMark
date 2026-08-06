@@ -143,18 +143,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Acquire Geolocation
+    // Acquire Geolocation with 10-Meter Precision
     function fetchLocation() {
         if (!navigator.geolocation) {
             handleGpsFailure('GPS Hardware Unsupported in Browser');
             return;
         }
 
-        geoBadge.innerText = 'Acquiring GPS...';
+        geoBadge.innerText = 'Acquiring High-Precision GPS...';
 
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                updatePosition(pos.coords.latitude, pos.coords.longitude);
+                const acc = Math.round(pos.coords.accuracy * 10) / 10;
+                updatePosition(pos.coords.latitude, pos.coords.longitude, acc);
             },
             (err) => {
                 console.error("GPS Error:", err);
@@ -165,12 +166,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 handleGpsFailure(errReason);
             },
-            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     }
 
-    function updatePosition(lat, lng) {
-        currentCoords = { latitude: lat, longitude: lng };
+    function updatePosition(lat, lng, accuracyMeters = 0.0) {
+        currentCoords = { latitude: lat, longitude: lng, accuracy: accuracyMeters };
 
         if (tenantGeofence && tenantGeofence.latitude) {
             const dist = calculateHaversineJS(
@@ -179,14 +180,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 parseFloat(tenantGeofence.latitude),
                 parseFloat(tenantGeofence.longitude)
             );
-            const maxRadius = parseFloat(tenantGeofence.radius_meters || 200);
+            const maxRadius = parseFloat(tenantGeofence.radius_meters || 10.0);
+            const accStr = accuracyMeters > 0 ? ` | ±${accuracyMeters}m` : '';
 
-            if (dist <= maxRadius) {
+            if (accuracyMeters > 25.0) {
+                geoBadge.className = 'px-3 py-1.5 text-xs font-semibold rounded-full bg-amber-500 text-white border border-amber-400 shadow-sm flex items-center gap-1.5 cursor-pointer';
+                geoBadge.innerHTML = `<i class="fas fa-satellite text-sm animate-spin"></i> GPS Accuracy ±${accuracyMeters}m (Move outdoors for 10m precision)`;
+            } else if (dist <= maxRadius) {
                 geoBadge.className = 'px-3 py-1.5 text-xs font-semibold rounded-full bg-emerald-500 text-white border border-emerald-400 shadow-sm flex items-center gap-1.5';
-                geoBadge.innerHTML = `<i class="fas fa-check-circle"></i> Inside Geofence (${dist}m away)`;
+                geoBadge.innerHTML = `<i class="fas fa-check-circle"></i> Inside Geofence (${dist}m${accStr})`;
             } else {
                 geoBadge.className = 'px-3 py-1.5 text-xs font-semibold rounded-full bg-rose-500 text-white border border-rose-400 shadow-sm flex items-center gap-1.5 animate-pulse';
-                geoBadge.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Outside Geofence (${dist}m / limit ${maxRadius}m)`;
+                geoBadge.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Outside Geofence (${dist}m / limit ${maxRadius}m${accStr})`;
             }
         }
     }
