@@ -231,14 +231,17 @@ class LocalFirestoreEngine:
         base_db_file = os.path.join(Config.BASE_DIR, 'local_db.json')
         
         # Test if base directory is writable (Vercel serverless environments are read-only)
-        try:
-            test_file = os.path.join(Config.BASE_DIR, '.write_test')
-            with open(test_file, 'w') as f:
-                f.write('1')
-            os.remove(test_file)
-            self.db_file = base_db_file
-        except Exception:
+        if os.environ.get('VERCEL'):
             self.db_file = os.path.join(tempfile.gettempdir(), 'local_db.json')
+        else:
+            try:
+                test_file = os.path.join(Config.BASE_DIR, '.write_test')
+                with open(test_file, 'w') as f:
+                    f.write('1')
+                os.remove(test_file)
+                self.db_file = base_db_file
+            except Exception:
+                self.db_file = os.path.join(tempfile.gettempdir(), 'local_db.json')
 
         self._data = {}
         self.load()
