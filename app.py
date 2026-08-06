@@ -7,7 +7,11 @@ from firebase_config import init_firebase
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
-from jinja2 import FileSystemLoader, ChoiceLoader
+from jinja2 import FileSystemLoader, DictLoader, ChoiceLoader
+try:
+    from templates_bundle import TEMPLATES_DICT
+except ImportError:
+    TEMPLATES_DICT = {}
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 template_dir = os.path.join(BASE_DIR, 'templates')
@@ -17,15 +21,13 @@ def create_app():
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.config.from_object(Config)
 
-    # Force Jinja2 to explicitly load templates from absolute system paths on Vercel
-    app.jinja_loader = ChoiceLoader([
-        FileSystemLoader(template_dir),
-        FileSystemLoader(os.path.join(template_dir, 'public')),
-        FileSystemLoader(os.path.join(template_dir, 'portal')),
-        FileSystemLoader(os.path.join(template_dir, 'employee')),
-        FileSystemLoader(os.path.join(template_dir, 'admin')),
-        app.jinja_loader
-    ])
+    # Bulletproof Jinja2 Loader: First check FileSystem, then in-memory DictLoader fallback
+    loaders = [FileSystemLoader(template_dir)]
+    if TEMPLATES_DICT:
+        loaders.append(DictLoader(TEMPLATES_DICT))
+    loaders.append(app.jinja_loader)
+
+    app.jinja_loader = ChoiceLoader(loaders)
 
     # Initialize Firebase SDK / Local Fallback Driver safely
     try:
