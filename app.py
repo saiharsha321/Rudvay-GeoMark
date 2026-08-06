@@ -17,9 +17,13 @@ def create_app():
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.config.from_object(Config)
 
-    # Force Jinja2 to explicitly load templates from absolute system path on Vercel
+    # Force Jinja2 to explicitly load templates from absolute system paths on Vercel
     app.jinja_loader = ChoiceLoader([
         FileSystemLoader(template_dir),
+        FileSystemLoader(os.path.join(template_dir, 'public')),
+        FileSystemLoader(os.path.join(template_dir, 'portal')),
+        FileSystemLoader(os.path.join(template_dir, 'employee')),
+        FileSystemLoader(os.path.join(template_dir, 'admin')),
         app.jinja_loader
     ])
 
