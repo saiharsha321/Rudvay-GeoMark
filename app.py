@@ -7,8 +7,12 @@ from firebase_config import init_firebase
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+template_dir = os.path.join(BASE_DIR, 'templates')
+static_dir = os.path.join(BASE_DIR, 'static')
+
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.config.from_object(Config)
 
     # Initialize Firebase SDK / Local Fallback Driver safely

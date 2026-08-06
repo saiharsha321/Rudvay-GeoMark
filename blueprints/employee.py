@@ -44,13 +44,17 @@ def process_async_photo_upload(tenant_id, employee_id, att_id, punch_type, photo
                     raise ValueError("No active storage bucket")
             except Exception as e:
                 logger.warning(f"Async photo upload error: {e}")
-                local_filename = f"{now_dt.strftime('%Y%m%d_%H%M%S')}_{punch_type}.jpg"
-                local_dir = os.path.join(Config.BASE_DIR, 'static', 'uploads', tenant_id, employee_id)
-                os.makedirs(local_dir, exist_ok=True)
-                local_path = os.path.join(local_dir, local_filename)
-                with open(local_path, 'wb') as f:
-                    f.write(img_bytes)
-                photo_url = f"/static/uploads/{tenant_id}/{employee_id}/{local_filename}"
+                try:
+                    local_filename = f"{now_dt.strftime('%Y%m%d_%H%M%S')}_{punch_type}.jpg"
+                    local_dir = os.path.join(Config.BASE_DIR, 'static', 'uploads', tenant_id, employee_id)
+                    os.makedirs(local_dir, exist_ok=True)
+                    local_path = os.path.join(local_dir, local_filename)
+                    with open(local_path, 'wb') as f:
+                        f.write(img_bytes)
+                    photo_url = f"/static/uploads/{tenant_id}/{employee_id}/{local_filename}"
+                except Exception as local_err:
+                    logger.warning(f"Local disk save failed: {local_err}. Using Data URI fallback.")
+                    photo_url = photo_b64 if photo_b64.startswith("data:image") else f"data:image/jpeg;base64,{photo_b64}"
 
         if photo_url:
             field = 'punch_in_photo_url' if punch_type == 'in' else 'punch_out_photo_url'
