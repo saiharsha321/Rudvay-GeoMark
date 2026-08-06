@@ -33,12 +33,30 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
-        body { font-family: 'Outfit', sans-serif; }
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; color: #0f172a; }
         .glass-card {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
+        /* Fallback Core CSS Rules for AdBlocker / Brave Shield compatibility */
+        .bg-slate-950 { background-color: #020617 !important; }
+        .bg-slate-900 { background-color: #0f172a !important; }
+        .bg-white { background-color: #ffffff !important; }
+        .text-white { color: #ffffff !important; }
+        .text-slate-900 { color: #0f172a !important; }
+        .text-slate-700 { color: #334155 !important; }
+        .text-slate-600 { color: #475569 !important; }
+        .text-slate-500 { color: #64748b !important; }
+        .text-slate-400 { color: #94a3b8 !important; }
+        .text-slate-300 { color: #cbd5e1 !important; }
+        .text-emerald-400 { color: #34d399 !important; }
+        .text-emerald-500 { color: #10b981 !important; }
+        .bg-emerald-500 { background-color: #10b981 !important; }
+        .border-slate-800 { border-color: #1e293b !important; }
+        .border-slate-100 { border-color: #f1f5f9 !important; }
+        .rounded-3xl { border-radius: 1.5rem !important; }
+        .rounded-2xl { border-radius: 1rem !important; }
     </style>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
