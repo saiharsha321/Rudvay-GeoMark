@@ -32,17 +32,22 @@ def create_app():
 
     @app.context_processor
     def inject_firebase_config():
-        return {
-            'firebase_config': {
-                'apiKey': app.config.get('FIREBASE_API_KEY'),
-                'authDomain': app.config.get('FIREBASE_AUTH_DOMAIN'),
-                'projectId': app.config.get('FIREBASE_PROJECT_ID'),
-                'storageBucket': app.config.get('FIREBASE_STORAGE_BUCKET'),
-                'messagingSenderId': app.config.get('FIREBASE_MESSAGING_SENDER_ID'),
-                'appId': app.config.get('FIREBASE_APP_ID'),
-                'measurementId': app.config.get('FIREBASE_MEASUREMENT_ID')
+        from flask import current_app
+        try:
+            cfg = current_app.config if current_app else {}
+            return {
+                'firebase_config': {
+                    'apiKey': cfg.get('FIREBASE_API_KEY', ''),
+                    'authDomain': cfg.get('FIREBASE_AUTH_DOMAIN', ''),
+                    'projectId': cfg.get('FIREBASE_PROJECT_ID', ''),
+                    'storageBucket': cfg.get('FIREBASE_STORAGE_BUCKET', ''),
+                    'messagingSenderId': cfg.get('FIREBASE_MESSAGING_SENDER_ID', ''),
+                    'appId': cfg.get('FIREBASE_APP_ID', ''),
+                    'measurementId': cfg.get('FIREBASE_MEASUREMENT_ID', '')
+                }
             }
-        }
+        except Exception:
+            return {'firebase_config': {}}
 
     @app.errorhandler(404)
     def page_not_found(e):
@@ -50,8 +55,10 @@ def create_app():
 
     @app.errorhandler(500)
     def internal_server_error(e):
-        logging.error(f"Internal Server Error: {e}", exc_info=True)
-        return render_template('error.html', code=500, title="Internal Server Error", message=str(e) or "An unexpected server error occurred."), 500
+        import traceback
+        err_detail = getattr(e, 'original_exception', e)
+        logging.error(f"Internal Server Error: {err_detail}\n{traceback.format_exc()}")
+        return render_template('error.html', code=500, title="Internal Server Error", message=f"Server Exception: {err_detail}"), 500
 
     return app
 
